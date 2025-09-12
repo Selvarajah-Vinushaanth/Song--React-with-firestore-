@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add these animations at the end of your CSS file */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-slow {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.5; }
+}
+
+@keyframes card-click {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+.animate-card-click {
+  animation: card-click 0.4s ease-in-out forwards;
+}
+
+/* Add styles for the selection panels */
+.options-panel {
+  transition: all 0.3s ease-in-out;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.options-panel.visible {
+  max-height: 200px;
+  opacity: 1;
+}
+
+/* Styles for metaphor display */
+.metaphor-container {
+  width: 100%;
+}
+
+.metaphor-text {
+  line-height: 1.6;
+  font-style: italic;
+  background-color: rgba(76, 29, 149, 0.1);
+  border-left: 3px solid rgba(147, 51, 234, 0.5);
+  padding: 10px 15px;
+  border-radius: 0 6px 6px 0;
+  transition: all 0.2s ease;
+}
+
+.metaphor-text:hover {
+  background-color: rgba(76, 29, 149, 0.15);
+  border-left-color: rgba(147, 51, 234, 0.8);
+}
+
+.copy-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.copy-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Add a nice highlight for copied text */
+.highlight-copy {
+  animation: highlightCopy 2s ease-out;
+}
+
+@keyframes highlightCopy {
+  0% { background-color: rgba(16, 185, 129, 0.2); }
+  100% { background-color: transparent; }
+}
+
+/* Hide scrollbar utility class */
+.scrollbar-hide {
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
