@@ -26,6 +26,8 @@
 firebase-config.js
 src/firebase-config.js
 src/config/firebase.js
+*-firebase-adminsdk-*.json
+song-writing-assistant-4cd39-firebase-adminsdk-fbsvc-8ddefda8ac.json
 
 # logs
 npm-debug.log*
