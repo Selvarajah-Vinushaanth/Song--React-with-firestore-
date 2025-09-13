@@ -17,6 +17,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import MaskingPredict from './pages/MaskingPredict';
+import AdminDashboard from './pages/AdminDashboard';
 import ApiKeys from './pages/ApiKeys';
 
 // Private Route component
@@ -58,6 +59,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <LyricGenerator />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <PrivateRoute>
+                    <AdminDashboard />
                   </PrivateRoute>
                 } 
               />

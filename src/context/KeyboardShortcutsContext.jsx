@@ -24,6 +24,7 @@ export function KeyboardShortcutsProvider({ children }) {
       { key: 'u', description: 'Go to Profile', action: () => navigate('/profile') },
       { key: 'd', description: 'Go to Dashboard', action: () => navigate('/dashboard') },
       { key: 'k', description: 'Go to API Keys', action: () => navigate('/api-keys') },
+      { key: 'r', description: 'Refresh Page', action: () => window.location.reload() },
       { key: '?', description: 'Show/Hide Keyboard Shortcuts', action: () => setShowShortcutsHelp(prev => !prev) },
     ];
     setShortcuts(globalShortcuts);

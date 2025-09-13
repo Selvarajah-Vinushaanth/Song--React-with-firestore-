@@ -286,22 +286,24 @@ function ApiKeyManager() {
     'X-API-Key': 'YOUR_API_KEY_HERE'
   },
   body: JSON.stringify({
-    source: 'அன்பு',
-    target: 'மழை',
-    emotion: 'positive'
+    source: 'விழி',
+    target: 'மனம்',
+    context: 'பார்வை',
+    count: 2
   })
 })
 .then(response => response.json())
 .then(data => console.log(data));`,
       request: {
-        source: "அன்பு",
-        target: "மழை",
-        emotion: "positive"
+        source: "விழி",
+        target: "மனம்",
+        context: "பார்வை",
+        count : 2
       },
       response: {
         metaphors: [
-          "அன்பு என்பது மழையைப் போல, இதயத்தில் பெய்து மனதை செழிக்கச் செய்கிறது",
-          "அன்பு என்னும் மழை, வாழ்வின் வறட்சியை நீக்கி பசுமையை தருகிறது"
+          "உன் பார்வை ஒளி போல, இருண்ட மனதை பிரகாசமாக மாற்றுகிறது",
+          "விழியின் நிழல் மனதை ஒட்டி, காதலின் நதி போல ஓடுகிறது"
         ]
       },
       color: "from-violet-500 to-purple-500"
@@ -343,18 +345,20 @@ function ApiKeyManager() {
   },
   body: JSON.stringify({
     motion: 'காதல்',
-    seed: 'மழை'
+    seed: 'மழை',
+    count: 1
   })
 })
 .then(response => response.json())
 .then(data => console.log(data));`,
       request: {
         motion: "காதல்",
-        seed: "மழை"
+        seed: "மழை",
+        count: 1
       },
       response: {
         lyrics: [
-          "மழையில் நனைந்த நினைவுகள் போல்\nஉன் காதல் என்னை சூழ்ந்தது\nஇதயத்தின் துடிப்பு போல்\nஉன் நினைவு என்னுள் இருக்கிறது"
+          "மழையில் நனைந்த நினைவுகள் போல் உன் காதல் என்னை சூழ்ந்தது இதயத்தின் துடிப்பு போல் உன் நினைவு என்னுள் இருக்கிறது"
         ]
       },
       color: "from-blue-500 to-cyan-500"

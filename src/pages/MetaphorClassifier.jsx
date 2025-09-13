@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useRef, useEffect } from "react"
 import axios from "axios"
 import { Link } from "react-router-dom"
@@ -493,6 +492,39 @@ export default function MetaphorClassifier() {
     const start = (page - 1) * pageSize
     return sortedResults.slice(start, start + pageSize) // Use sortedResults for pagination
   }, [sortedResults, page, pageSize])
+
+  // Helper function to calculate 4-axis metaphor dimensions
+  const calculateMetaphorDimensions = (results, stats) => {
+    if (!results || results.length === 0) return { literalness: 0, figurativeStrength: 0, concreteness: 0, emotionalIntensity: 0 }
+
+    const totalSentences = results.length
+    const metaphorCount = stats?.metaphor_count || 0
+    const avgConfidence = stats?.average_confidence || 0
+
+    // Literalness: 0 = fully metaphorical → 10 = fully literal
+    const literalness = ((stats?.literal_count || 0) / totalSentences) * 10
+
+    // Figurative Strength: How strong the metaphorical mapping is (inverse of literalness for metaphors)
+    const metaphorRatio = metaphorCount / totalSentences
+    const figurativeStrength = metaphorRatio * avgConfidence * 10
+
+    // Concreteness: Based on confidence and metaphor presence (metaphors often use concrete imagery)
+    const concreteness = (avgConfidence * 10) * (metaphorRatio * 0.7 + 0.3)
+
+    // Emotional Intensity: Higher for metaphors with high confidence
+    const emotionalIntensity = (metaphorRatio * avgConfidence + (1 - metaphorRatio) * 0.3) * 10
+
+    return {
+      literalness: Math.min(10, Math.max(0, literalness)),
+      figurativeStrength: Math.min(10, Math.max(0, figurativeStrength)),
+      concreteness: Math.min(10, Math.max(0, concreteness)),
+      emotionalIntensity: Math.min(10, Math.max(0, emotionalIntensity))
+    }
+  }
+
+  const metaphorDimensions = useMemo(() => {
+    return calculateMetaphorDimensions(results, stats)
+  }, [results, stats])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-gray-100 relative overflow-hidden">
@@ -1030,46 +1062,76 @@ export default function MetaphorClassifier() {
 
                   {/* Charts with updated colors */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-                    {/* radar chart */}
+                    {/* Enhanced 4-axis metaphor analysis radar chart */}
                     <div className="flex flex-col bg-slate-800/30 rounded-xl p-6 border border-violet-600/20">
-                      <h3 className="font-semibold text-violet-200 mb-4 text-lg">Overall Profile (Radar)</h3>
+                      <h3 className="font-semibold text-violet-200 mb-4 text-lg">Metaphor Analysis Dimensions</h3>
                       <div className="flex-1 h-[500px]">
                         <Plot
                           data={[
                             {
                               type: "scatterpolar",
                               r: [
-                                stats?.metaphor_count || 0,
-                                stats?.literal_count || 0,
-                                stats?.total_sentences || 0,
-                                ((stats?.average_confidence || 0) * 100).toFixed(1),
+                                metaphorDimensions.literalness,
+                                metaphorDimensions.figurativeStrength,
+                                metaphorDimensions.concreteness,
+                                metaphorDimensions.emotionalIntensity,
                               ],
-                              theta: ["Metaphor", "Literal", "Total", "Confidence"],
+                              theta: ["Literalness", "Figurative Strength", "Concreteness", "Emotional Intensity"],
                               fill: "toself",
-                              line: { color: "#8b5cf6" },
-                              fillcolor: "rgba(139, 92, 246, 0.1)",
+                              line: { color: "#8b5cf6", width: 3 },
+                              fillcolor: "rgba(139, 92, 246, 0.2)",
+                              marker: { color: "#8b5cf6", size: 8 },
+                              name: "Analysis Profile"
                             },
                           ]}
                           layout={{
                             polar: {
                               radialaxis: {
                                 visible: true,
-                                range: [0, Math.max(stats?.total_sentences || 1, 100)],
+                                range: [0, 10],
+                                tickmode: "linear",
+                                tick0: 0,
+                                dtick: 2,
                                 gridcolor: "#3730a3",
                                 linecolor: "#8b5cf6",
+                                tickcolor: "#8b5cf6",
+                                tickfont: { color: "#c4b5fd", size: 10 }
                               },
                               angularaxis: {
                                 gridcolor: "#3730a3",
                                 linecolor: "#8b5cf6",
+                                tickcolor: "#8b5cf6",
+                                tickfont: { color: "#c4b5fd", size: 12, family: "Arial, sans-serif" }
                               },
+                              bgcolor: "rgba(0,0,0,0)"
                             },
                             paper_bgcolor: "rgba(0,0,0,0)",
                             plot_bgcolor: "rgba(0,0,0,0)",
                             font: { color: "#8b5cf6" },
+                            margin: { t: 20, r: 20, b: 20, l: 20 },
+                            showlegend: false
                           }}
                           config={{ displayModeBar: false }}
                           style={{ width: "100%", height: "100%" }}
                         />
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-violet-300">
+                        <div className="bg-violet-900/20 p-2 rounded">
+                          <strong>Literalness:</strong> {metaphorDimensions.literalness.toFixed(1)}/10
+                          <div className="text-violet-400 text-xs">0=metaphorical → 10=literal</div>
+                        </div>
+                        <div className="bg-violet-900/20 p-2 rounded">
+                          <strong>Figurative Strength:</strong> {metaphorDimensions.figurativeStrength.toFixed(1)}/10
+                          <div className="text-violet-400 text-xs">0=no figures → 10=strong metaphors</div>
+                        </div>
+                        <div className="bg-violet-900/20 p-2 rounded">
+                          <strong>Concreteness:</strong> {metaphorDimensions.concreteness.toFixed(1)}/10
+                          <div className="text-violet-400 text-xs">0=abstract → 10=tangible imagery</div>
+                        </div>
+                        <div className="bg-violet-900/20 p-2 rounded">
+                          <strong>Emotional Intensity:</strong> {metaphorDimensions.emotionalIntensity.toFixed(1)}/10
+                          <div className="text-violet-400 text-xs">0=neutral → 10=highly emotional</div>
+                        </div>
                       </div>
                     </div>
 
@@ -1105,46 +1167,80 @@ export default function MetaphorClassifier() {
                   {/* Explanatory Analysis Table */}
                   <div className="my-8">
                     <h3 className="text-2xl font-bold text-violet-100 mb-6 border-b border-violet-600/30 pb-3">
-                      Explanatory Analysis
+                      Detailed Analysis
                     </h3>
 
-                    <div className="overflow-x-auto rounded-2xl shadow-xl bg-slate-800/50 border border-violet-600/20">
-                      <table className="min-w-full text-left text-violet-100 text-sm">
-                        <thead className="bg-gradient-to-r from-violet-800/60 to-purple-800/60">
-                          <tr>
-                            <th className="px-8 py-4 font-semibold">Metric</th>
-                            <th className="px-8 py-4 font-semibold">Value</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
-                            <td className="px-8 py-4">Total Sentences</td>
-                            <td className="px-8 py-4 font-bold text-violet-300">{stats?.total_sentences || 0}</td>
-                          </tr>
-                          <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
-                            <td className="px-8 py-4">Metaphors</td>
-                            <td className="px-8 py-4 font-bold text-indigo-300">{stats?.metaphor_count || 0}</td>
-                          </tr>
-                          <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
-                            <td className="px-8 py-4">Literal Sentences</td>
-                            <td className="px-8 py-4 font-bold text-emerald-300">{stats?.literal_count || 0}</td>
-                          </tr>
-                          <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
-                            <td className="px-8 py-4">Average Confidence</td>
-                            <td className="px-8 py-4 font-bold text-yellow-300">
-                              {((stats?.average_confidence || 0) * 100).toFixed(1)}%
-                            </td>
-                          </tr>
-                          <tr className="hover:bg-violet-800/20 transition-all">
-                            <td className="px-8 py-4">High Confidence Sentences (&gt;85%)</td>
-                            <td className="px-8 py-4 font-bold text-orange-300">{stats?.high_confidence_count || 0}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                      <p className="text-violet-300/70 text-sm mt-4 px-8 pb-6">
-                        These stats complement the charts above, giving a quick overview of sentence distribution and
-                        confidence levels.
-                      </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                      {/* Traditional Stats Table */}
+                      <div className="overflow-x-auto rounded-2xl shadow-xl bg-slate-800/50 border border-violet-600/20">
+                        <h4 className="text-lg font-semibold text-violet-200 p-4 bg-violet-800/30 border-b border-violet-600/20">
+                          Classification Summary
+                        </h4>
+                        <table className="min-w-full text-left text-violet-100 text-sm">
+                          <tbody>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Total Sentences</td>
+                              <td className="px-6 py-3 font-bold text-violet-300">{stats?.total_sentences || 0}</td>
+                            </tr>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Metaphors</td>
+                              <td className="px-6 py-3 font-bold text-indigo-300">{stats?.metaphor_count || 0}</td>
+                            </tr>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Literal Sentences</td>
+                              <td className="px-6 py-3 font-bold text-emerald-300">{stats?.literal_count || 0}</td>
+                            </tr>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Average Confidence</td>
+                              <td className="px-6 py-3 font-bold text-yellow-300">
+                                {((stats?.average_confidence || 0) * 100).toFixed(1)}%
+                              </td>
+                            </tr>
+                            <tr className="hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">High Confidence (&gt;85%)</td>
+                              <td className="px-6 py-3 font-bold text-orange-300">{stats?.high_confidence_count || 0}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Metaphor Dimensions Table */}
+                      <div className="overflow-x-auto rounded-2xl shadow-xl bg-slate-800/50 border border-violet-600/20">
+                        <h4 className="text-lg font-semibold text-violet-200 p-4 bg-violet-800/30 border-b border-violet-600/20">
+                          Linguistic Dimensions
+                        </h4>
+                        <table className="min-w-full text-left text-violet-100 text-sm">
+                          <tbody>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Literalness</td>
+                              <td className="px-6 py-3 font-bold text-violet-300">
+                                {metaphorDimensions.literalness.toFixed(1)}/10
+                              </td>
+                            </tr>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Figurative Strength</td>
+                              <td className="px-6 py-3 font-bold text-indigo-300">
+                                {metaphorDimensions.figurativeStrength.toFixed(1)}/10
+                              </td>
+                            </tr>
+                            <tr className="border-b border-violet-700/30 hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Concreteness</td>
+                              <td className="px-6 py-3 font-bold text-emerald-300">
+                                {metaphorDimensions.concreteness.toFixed(1)}/10
+                              </td>
+                            </tr>
+                            <tr className="hover:bg-violet-800/20 transition-all">
+                              <td className="px-6 py-3">Emotional Intensity</td>
+                              <td className="px-6 py-3 font-bold text-yellow-300">
+                                {metaphorDimensions.emotionalIntensity.toFixed(1)}/10
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div className="p-4 text-xs text-violet-300/70 bg-violet-900/10 border-t border-violet-600/20">
+                          <p><strong>Note:</strong> These dimensions provide deeper insight into the linguistic characteristics of your text beyond simple metaphor/literal classification.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1455,7 +1551,7 @@ export default function MetaphorClassifier() {
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5 text-violet-400 mr-2"
-                  viewBox="0 0 20 20"
+                  viewBox="0 0 24 24"
                   fill="currentColor"
                 >
                   <path

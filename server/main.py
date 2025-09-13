@@ -103,8 +103,10 @@ async def log_api_request(user_id: str, endpoint: str, status_code: int, latency
 class MetaphorRequest(BaseModel):
     source: str
     target: str
-    emotion: Optional[str] = "positive"
-    count: Optional[int] = 2  # Add count parameter with default value
+    # Prefer Context from frontend (supports Tamil/English); keep emotion for backward compatibility
+    Context: Optional[str] = None
+    emotion: Optional[str] = None
+    count: Optional[int] = 2
 
 class MetaphorResponse(BaseModel):
     metaphors: List[str]
@@ -128,28 +130,31 @@ class MaskingResponse(BaseModel):
 @app.post("/api/create-metaphors", response_model=MetaphorResponse)
 async def create_metaphors(request: MetaphorRequest):
     try:
-        # Map emotion to style for the generate_metaphor function
-        style_map = {
+        # Prefer explicit Context from client; else derive from emotion for backward compatibility
+        emotion_to_context = {
             "positive": "romantic",
-            "negative": "dark",
-            "neutral": "general"
+            "negative": "philosophical",
+            "neutral": "poetic",
         }
-        style = style_map.get(request.emotion, "general")
-        
-        # Generate metaphors using source as topic, and target for context
-        metaphors = generate_metaphor(
-            topic=request.source, 
-            style=style, 
-            count=request.count,  # Use the count from request
-            target=request.target
+        normalized_context = (
+            (request.Context or "").strip()
+            or emotion_to_context.get((request.emotion or "").strip().lower(), "poetic")
         )
-        
-        # Remove duplicates if any
+
+        # Call new signature: generate_metaphor(source, target, Context, count)
+        metaphors = generate_metaphor(
+            source=request.source,
+            target=request.target,
+            Context=normalized_context,
+            count=request.count or 2,
+        )
+
+        # Deduplicate
         unique_metaphors = []
         for m in metaphors:
             if m not in unique_metaphors:
                 unique_metaphors.append(m)
-        
+
         return {"metaphors": unique_metaphors}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating metaphors: {str(e)}")
@@ -264,36 +269,34 @@ async def create_metaphors_v1(request: MetaphorRequest, user_id: str = Depends(v
     start_time = time.time()
     
     try:
-        # Map emotion to style for the generate_metaphor function
-        style_map = {
+        emotion_to_context = {
             "positive": "romantic",
-            "negative": "dark",
-            "neutral": "general"
+            "negative": "philosophical",
+            "neutral": "poetic",
         }
-        style = style_map.get(request.emotion, "general")
-        
-        # Generate metaphors using source as topic, and target for context
-        metaphors = generate_metaphor(
-            topic=request.source, 
-            style=style, 
-            count=request.count,  # Use the count from request
-            target=request.target
+        normalized_context = (
+            (request.Context or "").strip()
+            or emotion_to_context.get((request.emotion or "").strip().lower(), "poetic")
         )
-        
-        # Remove duplicates if any
+
+        metaphors = generate_metaphor(
+            source=request.source,
+            target=request.target,
+            Context=normalized_context,
+            count=request.count or 2,
+        )
+
         unique_metaphors = []
         for m in metaphors:
             if m not in unique_metaphors:
                 unique_metaphors.append(m)
-        
-        # Log successful request
+
         latency_ms = int((time.time() - start_time) * 1000)
         payload_size = len(request.source) + len(request.target or "")
         await log_api_request(user_id, "/api/v1/create-metaphors", 200, latency_ms, payload_size)
-        
+
         return {"metaphors": unique_metaphors}
     except Exception as e:
-        # Log error request
         latency_ms = int((time.time() - start_time) * 1000)
         await log_api_request(user_id, "/api/v1/create-metaphors", 500, latency_ms)
         raise HTTPException(status_code=500, detail=f"Error generating metaphors: {str(e)}")

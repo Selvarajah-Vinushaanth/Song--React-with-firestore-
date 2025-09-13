@@ -1,75 +1,108 @@
 """
 Metaphor Creator Model
-This module generates creative metaphors based on a given topic and style using Hugging Face models.
+This module generates creative metaphors based on Vehicle, Tenor, and Context using fine-tuned Tamil model.
 """
 import torch
 from typing import List
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import random
 
-# Define the model for text generation
-# We're using GPT-2 as an example, but you could use a more advanced model like T5, BART, or GPT-3
-MODEL_NAME = "gpt2"  # You can use more advanced models like "gpt2-large" or "EleutherAI/gpt-neo-1.3B"
+# Define the model for text generation - using the fine-tuned model
+MODEL_NAME = "Vinushaanth/metaphor-create-withoutlora"  # Your fine-tuned model
 
 # Initialize tokenizer and model (lazy loading - will load on first use)
 tokenizer = None
 model = None
-generator = None
+device = None
 
-# Predefined metaphors for better quality when model fails
+# Context mapping from English/Tamil to Tamil contexts
+CONTEXT_MAPPING = {
+    "poetic": "கவிதை",
+    "கவிதை": "கவிதை",
+    "short": "குறுகிய",
+    "குறுகிய": "குறுகிய", 
+    "romantic": "காதல்",
+    "காதல்": "காதல்",
+    "philosophical": "தத்துவம்",
+    "தத்துவம்": "தத்துவம்",
+    "humorous": "நகைச்சுவை",
+    "நகைச்சுவை": "நகைச்சுவை",
+    "general": "பொதுவான",
+    "சுதந்திரம்": "சுதந்திரம்",
+    "தடுப்பு": "தடுப்பு",
+    "நீர் போல ஓடும்": "நீர் போல ஓடும்",
+    "அதிர்ச்சி": "அதிர்ச்சி",
+    "மறைந்தல்": "மறைந்தல்",
+    "இன்பம்": "இன்பம்"
+}
+
+# Predefined metaphor templates for fallback
 PREDEFINED_METAPHORS = {
-    "positive": [
-        "{source} is like a {target}, radiating beauty in the simplest of moments.",
-        "{source} is like a brilliant {target}, revealing hidden depths and treasures within.",
-        "{source} is like a shining {target}, illuminating the darkness with its radiant presence.",
-        "Just as a {target} captures light, {source} captures the essence of beauty and wonder.",
-        "Like a perfect {target}, {source} is formed through pressure yet emerges with incomparable brilliance."
+    "கவிதை": [
+        "{vehicle} போல் {tenor} மின்னுகிறது",
+        "{tenor} ஒரு {vehicle} போன்று அழகாக இருக்கிறது",
+        "{vehicle} என்ற {tenor} மனதில் நிற்கிறது"
     ],
-    "negative": [
-        "{source} is like a tarnished {target}, losing its luster with each passing day.",
-        "{source} is like a cold {target}, distant and unyielding despite its beauty.",
-        "{source} is like a fractured {target}, beautiful yet deeply flawed within.",
-        "Like a {target} lost in darkness, {source} remains hidden from those who seek it most.",
-        "{source} weighs upon the heart like a heavy {target}, beautiful but burdensome."
+    "காதல்": [
+        "{vehicle} போல் என் {tenor} துடிக்கிறது",
+        "{tenor} ஒரு {vehicle} போல் என் மனதில் வாழ்கிறது",
+        "{vehicle} என்னும் {tenor} என் உயிரில் கலந்தது"
     ],
-    "neutral": [
-        "{source} is like a {target}, simple in appearance yet complex in nature.",
-        "{source} transforms like a {target}, changing with perspective and light.",
-        "{source} resembles a {target}, equally valued by some yet overlooked by others.",
-        "Like a {target} that reflects its surroundings, {source} reveals more about the observer than itself.",
-        "{source} exists like a {target}, neither seeking attention nor avoiding it."
+    "தத்துவம்": [
+        "{vehicle} போல் {tenor} நிலையற்றது",
+        "{tenor} ஒரு {vehicle} போன்று ஆழமானது",
+        "{vehicle} என்ற {tenor} வாழ்க்கையின் உண்மை"
+    ],
+    "நகைச்சுவை": [
+        "{vehicle} போல் {tenor} விநோதமாக இருக்கிறது",
+        "{tenor} ஒரு {vehicle} போல் சுறுசுறுப்பாக இருக்கிறது"
+    ],
+    "குறுகிய": [
+        "{vehicle} போல் {tenor}",
+        "{tenor} = {vehicle}",
+        "{vehicle} என்ற {tenor}"
     ]
 }
 
 def load_model():
-    """Load the model and tokenizer if not already loaded"""
-    global tokenizer, model, generator
+    """Load the fine-tuned model and tokenizer if not already loaded"""
+    global tokenizer, model, device
     if tokenizer is None or model is None:
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
-        generator = pipeline('text-generation', model=model, tokenizer=tokenizer)
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+            model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            model.to(device)
+            model.eval()
+            print(f"Model loaded successfully on {device}")
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            # Fallback to a basic model if the fine-tuned one fails
+            tokenizer = AutoTokenizer.from_pretrained("gpt2")
+            model = AutoModelForCausalLM.from_pretrained("gpt2")
+            device = torch.device("cpu")
+            model.to(device)
+            model.eval()
 
-def generate_metaphor(topic: str, style: str = "general", count: int = 3, target: str = None) -> List[str]:
+def generate_metaphor(source: str, target: str, Context: str = "கவிதை", count: int = 3) -> List[str]:
     """
-    Generate creative metaphors based on the given topic and style using a Hugging Face model.
+    Generate creative metaphors using the fine-tuned model format.
     
     Args:
-        topic: The subject of the metaphor
-        style: Style category (general, romantic, nature)
+        source: The Vehicle (concrete concept) for the metaphor
+        target: The Tenor (abstract concept) for the metaphor  
+        Context: Context category for the metaphor
         count: Number of metaphors to generate
-        target: Optional target domain to relate the metaphor to
     
     Returns:
         List of generated metaphors
     """
-    # Map style to emotion for predefined metaphors
-    emotion_map = {
-        "romantic": "positive",
-        "dark": "negative",
-        "general": "neutral",
-        "nature": "positive"
-    }
-    emotion = emotion_map.get(style, "neutral")
+    # Map the source to Vehicle and target to Tenor for clarity
+    vehicle = source  # Concrete concept (source domain)
+    tenor = target    # Abstract concept (target domain)
+    
+    # Map context to Tamil if needed
+    tamil_context = CONTEXT_MAPPING.get(Context, Context)
     
     # Load model if not already loaded
     load_model()
@@ -77,110 +110,95 @@ def generate_metaphor(topic: str, style: str = "general", count: int = 3, target
     # Limit count to reasonable range
     count = max(1, min(5, count))
     
-    # Use target for comparison or default to general domains
-    if not target or target == "general":
-        # If no target specified, assign common domains based on style
-        if style == "romantic":
-            potential_targets = ["ocean", "flower", "star", "sunset", "diamond"]
-        elif style == "dark":
-            potential_targets = ["shadow", "storm", "abyss", "night", "fog"]
-        elif style == "nature":
-            potential_targets = ["tree", "river", "mountain", "sky", "garden"]
-        else:  # general
-            potential_targets = ["journey", "mirror", "bridge", "symphony", "painting"]
-        
-        # Select random targets from the appropriate list
-        if not target:
-            targets = random.sample(potential_targets, min(count, len(potential_targets)))
-        else:
-            targets = [target] * count
-    else:
-        targets = [target] * count
-    
-    # Create prompts based on style and whether target is provided
-    prompts = []
-    for i in range(count):
-        current_target = targets[i % len(targets)]
-        if style == "romantic":
-            prompt = f"Create a beautiful metaphor comparing {topic} to {current_target}. {topic} is like"
-        elif style == "dark":
-            prompt = f"Create a deep metaphor comparing {topic} to {current_target}. {topic} is like"
-        elif style == "nature":
-            prompt = f"Create a nature metaphor comparing {topic} to {current_target}. {topic} is like"
-        else:  # general
-            prompt = f"Create a profound metaphor comparing {topic} to {current_target}. {topic} is"
-        
-        prompts.append((prompt, current_target))
-    
-    # Generate metaphors
     metaphors = []
-    for prompt, current_target in prompts:
+    
+    # Generate metaphors using the fine-tuned model format
+    for i in range(count):
         try:
-            # Generate text with the model
-            output = generator(
-                prompt,
-                max_length=50,
-                num_return_sequences=1,
-                temperature=0.9,
-                top_p=0.92,
-                do_sample=True,
-                pad_token_id=tokenizer.eos_token_id
-            )
+            # Format input according to fine-tuned model's expected format
+            input_text = f"Vehicle:{vehicle} Tenor:{tenor} Context:{tamil_context} <sep>"
             
-            # Extract and clean up the generated text
-            generated_text = output[0]['generated_text']
+            # Tokenize input
+            inputs = tokenizer(input_text, return_tensors="pt").to(device)
             
-            # Process the generated text to extract just the metaphor
-            if " is like " in generated_text:
-                start_idx = generated_text.find(" is like ") + 8
-                metaphor = generated_text[start_idx:].strip()
+            # Generate with the model
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_length=100,  # Increased for better metaphors
+                    num_beams=5,
+                    early_stopping=True,
+                    temperature=0.8,
+                    do_sample=True,
+                    top_p=0.9,
+                    pad_token_id=tokenizer.eos_token_id
+                )
+            
+            # Decode the generated text
+            generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Remove the input prefix to get only generated part
+            generated_part = generated_text.replace(input_text, "").strip()
+            
+            # Clean up the generated metaphor
+            if generated_part:
+                # Split by common Tamil sentence endings and take the first complete sentence
+                sentences = []
+                current_sentence = ""
                 
-                # Clean up: remove repetitive words and limit length
-                words = metaphor.split()
-                cleaned_words = []
-                prev_word = None
-                repetition_count = 0
+                for char in generated_part:
+                    current_sentence += char
+                    if char in ['।', '.', '!', '?'] or (char == ' ' and len(current_sentence.strip()) > 30):
+                        if len(current_sentence.strip()) > 10:  # Minimum length check
+                            sentences.append(current_sentence.strip())
+                            break
+                        current_sentence = ""
                 
-                for word in words:
-                    if word == prev_word:
-                        repetition_count += 1
-                        if repetition_count > 2:  # Allow max 2 repetitions
-                            continue
-                    else:
-                        repetition_count = 0
-                    
-                    cleaned_words.append(word)
-                    prev_word = word
+                # If no sentence ending found, take first 50 characters and add period
+                if not sentences and len(generated_part) > 10:
+                    sentences.append(generated_part[:60].strip() + ".")
                 
-                metaphor = " ".join(cleaned_words)
-                
-                # Truncate to first 20 words to keep it concise
-                if len(cleaned_words) > 20:
-                    metaphor = " ".join(cleaned_words[:20])
-                
-                # Ensure it ends with proper punctuation
-                if not metaphor.endswith('.') and not metaphor.endswith('!') and not metaphor.endswith('?'):
-                    metaphor = metaphor + '.'
-                
-                formatted_metaphor = f"{topic} is like {metaphor}"
-                
-                # Check if the metaphor makes sense
-                if len(formatted_metaphor.split()) < 5 or len(formatted_metaphor) < 20:
-                    # Use predefined metaphor if generated one is too short
-                    template = random.choice(PREDEFINED_METAPHORS[emotion])
-                    formatted_metaphor = template.format(source=topic, target=current_target)
-                
-                metaphors.append(formatted_metaphor)
-            else:
-                # Use predefined metaphor as fallback
-                template = random.choice(PREDEFINED_METAPHORS[emotion])
-                formatted_metaphor = template.format(source=topic, target=current_target)
-                metaphors.append(formatted_metaphor)
+                if sentences:
+                    metaphor = sentences[0]
+                    # Ensure it doesn't repeat the input words too much
+                    if not (metaphor.count(vehicle) > 3 or metaphor.count(tenor) > 3):
+                        metaphors.append(metaphor)
+                        continue
+            
+            # Fallback to template if generation fails or is poor quality
+            template = random.choice(PREDEFINED_METAPHORS.get(tamil_context, PREDEFINED_METAPHORS["கவிதை"]))
+            fallback_metaphor = template.format(vehicle=vehicle, tenor=tenor)
+            metaphors.append(fallback_metaphor)
             
         except Exception as e:
-            # Fallback to predefined metaphor
-            template = random.choice(PREDEFINED_METAPHORS[emotion])
-            formatted_metaphor = template.format(source=topic, target=current_target)
-            metaphors.append(formatted_metaphor)
+            print(f"Error generating metaphor {i+1}: {e}")
+            # Use predefined template as fallback
+            template = random.choice(PREDEFINED_METAPHORS.get(tamil_context, PREDEFINED_METAPHORS["கவிதை"]))
+            fallback_metaphor = template.format(vehicle=vehicle, tenor=tenor)
+            metaphors.append(fallback_metaphor)
     
-    return metaphors
+    # Remove duplicates while preserving order
+    unique_metaphors = []
+    for metaphor in metaphors:
+        if metaphor not in unique_metaphors:
+            unique_metaphors.append(metaphor)
+    
+    # If we don't have enough unique metaphors, add more using templates
+    while len(unique_metaphors) < count:
+        template = random.choice(PREDEFINED_METAPHORS.get(tamil_context, PREDEFINED_METAPHORS["கவிதை"]))
+        new_metaphor = template.format(vehicle=vehicle, tenor=tenor)
+        if new_metaphor not in unique_metaphors:
+            unique_metaphors.append(new_metaphor)
+    
+    return unique_metaphors[:count]
+
+# Alternative function name for backward compatibility
+def generate_metaphor_by_topic(topic: str, Context: str = "கவிதை", count: int = 3, target: str = None) -> List[str]:
+    """
+    Backward compatibility function that maps old parameters to new format
+    """
+    if target is None:
+        # If no target provided, use topic as both vehicle and tenor
+        return generate_metaphor(topic, topic, Context, count)
+    else:
+        return generate_metaphor(topic, target, Context, count)

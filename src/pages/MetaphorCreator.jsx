@@ -27,7 +27,7 @@ export default function MetaphorCreator() {
   const { currentUser } = useAuth()
   const [source, setSource] = useState("")
   const [target, setTarget] = useState("")
-  const [style, setStyle] = useState("poetic")
+  const [Context, setContext] = useState("")
   const [generatedMetaphors, setGeneratedMetaphors] = useState([])
   const [history, setHistory] = useState([])
   const [metaphorHistory, setMetaphorHistory] = useState([]) // Firestore history
@@ -62,7 +62,7 @@ export default function MetaphorCreator() {
           id: doc.id,
           source: data.source,
           target: data.target,
-          style: data.style,
+          Context: data.Context,
           results: data.metaphors || [],
           timestamp: data.timestamp?.toDate(),
         })
@@ -77,13 +77,13 @@ export default function MetaphorCreator() {
     }
   }
 
-  const saveToHistory = async (sourceText, targetText, selectedStyle, metaphors) => {
+  const saveToHistory = async (sourceText, targetText, selectedContext, metaphors) => {
     if (!currentUser || !sourceText.trim() || !targetText.trim()) {
       console.log("Cannot save to history - missing currentUser or inputs")
       return
     }
     
-    console.log("Saving to history:", { sourceText, targetText, selectedStyle, metaphorCount: metaphors?.length })
+    console.log("Saving to history:", { sourceText, targetText, selectedContext, metaphorCount: metaphors?.length })
     
     try {
       const historyRef = collection(db, "users", currentUser.uid, "metaphorHistory")
@@ -114,7 +114,7 @@ export default function MetaphorCreator() {
       const docRef = await addDoc(historyRef, {
         source: sourceText,
         target: targetText,
-        style: selectedStyle,
+        Context: selectedContext,
         metaphors: metaphors,
         timestamp: serverTimestamp(),
         type: "metaphor_creation"
@@ -133,7 +133,7 @@ export default function MetaphorCreator() {
     try {
       setSource(historyItem.source || "")
       setTarget(historyItem.target || "")
-      setStyle(historyItem.style || "poetic")
+      setContext(historyItem.Context || "poetic")
       setGeneratedMetaphors(historyItem.results || [])
       
       toast.success("Metaphor history loaded!", {
@@ -276,17 +276,17 @@ export default function MetaphorCreator() {
       const response = await axios.post("http://localhost:5000/api/create-metaphors", {
         source,
         target,
-        style,
+        Context,
         count, // Include count in the request
       })
 
       // Process the response
       if (response.data && response.data.metaphors) {
         setGeneratedMetaphors(response.data.metaphors)
-        setHistory([{ source, target, style, results: response.data.metaphors }, ...history])
+        setHistory([{ source, target, Context, results: response.data.metaphors }, ...history])
         
         // Save to Firestore history
-        await saveToHistory(source, target, style, response.data.metaphors)
+        await saveToHistory(source, target, Context, response.data.metaphors)
       } else {
         throw new Error("Invalid response format from server")
       }
@@ -301,10 +301,10 @@ export default function MetaphorCreator() {
         `a ${source} reborn inside an ${target}`,
       ]
       setGeneratedMetaphors(fallbackExamples)
-      setHistory([{ source, target, style, results: fallbackExamples }, ...history])
+      setHistory([{ source, target, Context, results: fallbackExamples }, ...history])
       
       // Save fallback to history too
-      await saveToHistory(source, target, style, fallbackExamples)
+      await saveToHistory(source, target, Context, fallbackExamples)
     } finally {
       setIsLoading(false)
     }
@@ -340,24 +340,25 @@ export default function MetaphorCreator() {
   }
 
   // Add this new function to handle example clicks
-  const handleExampleClick = (source, target) => {
+  const handleExampleClick = (source, target,context) => {
     setSource(source)
     setTarget(target)
+    setContext(context)
     // Optional: Scroll to the input fields for better UX
     document.querySelector('input[placeholder*="source"]')?.scrollIntoView({ behavior: "smooth", block: "center" })
   }
 
   // Chart Data Helpers
-  function getStyleChartData() {
-    const styleCounts = {}
+  function getContextChartData() {
+    const ContextCounts = {}
     history.forEach((h) => {
-      styleCounts[h.style] = (styleCounts[h.style] || 0) + 1
+      ContextCounts[h.Context] = (ContextCounts[h.Context] || 0) + 1
     })
     return {
-      labels: Object.keys(styleCounts),
+      labels: Object.keys(ContextCounts),
       datasets: [
         {
-          data: Object.values(styleCounts),
+          data: Object.values(ContextCounts),
           backgroundColor: ["#ec4899", "#f43f5e", "#fb7185", "#fda4af", "#fecaca"],
         },
       ],
@@ -405,19 +406,19 @@ export default function MetaphorCreator() {
   }
 
   function getFavoritesChartData() {
-    // Count by style for favorites
-    const styleCounts = {}
+    // Count by Context for favorites
+    const ContextCounts = {}
     favorites.forEach((f) => {
       const h = history.find((h) => h.results.includes(f))
       if (h) {
-        styleCounts[h.style] = (styleCounts[h.style] || 0) + 1
+        ContextCounts[h.Context] = (ContextCounts[h.Context] || 0) + 1
       }
     })
     return {
-      labels: Object.keys(styleCounts),
+      labels: Object.keys(ContextCounts),
       datasets: [
         {
-          data: Object.values(styleCounts),
+          data: Object.values(ContextCounts),
           backgroundColor: ["#ec4899", "#f43f5e", "#fb7185", "#fda4af", "#fecaca"],
         },
       ],
@@ -521,20 +522,26 @@ export default function MetaphorCreator() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 relative z-10">
               <div>
-                <label className="block text-sm font-medium text-pink-200 mb-2">Source</label>
+                <label className="block text-sm font-medium text-pink-200 mb-2">
+                  Source (Vehicle / வாகனம்)
+                  <span className="block text-xs text-pink-300/70 mt-1">Concrete concept (e.g., பறவை, கல், நதி)</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="Enter source (ex: pearl)"
+                  placeholder="Enter concrete concept (ex: பறவை, முத்து)"
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
                   className="w-full p-4 rounded-xl bg-slate-800/50 border border-pink-500/30 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-400"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-pink-200 mb-2">Target</label>
+                <label className="block text-sm font-medium text-pink-200 mb-2">
+                  Target (Tenor / களம்)
+                  <span className="block text-xs text-pink-300/70 mt-1">Abstract concept (e.g., ஆவல், உணர்வு, நினைவுகள்)</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="Enter target (ex: eye)"
+                  placeholder="Enter abstract concept (ex: ஆவல், மனம்)"
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
                   className="w-full p-4 rounded-xl bg-slate-800/50 border border-pink-500/30 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-400"
@@ -544,18 +551,17 @@ export default function MetaphorCreator() {
 
             <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-end relative z-10">
               <div className="w-full md:w-60">
-                <label className="block text-sm font-medium text-pink-200 mb-2">Style</label>
-                <select
-                  value={style}
-                  onChange={(e) => setStyle(e.target.value)}
-                  className="w-full p-4 rounded-xl bg-slate-800/50 border border-pink-500/30 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white"
-                >
-                  <option value="poetic">✨ Poetic</option>
-                  <option value="short">⚡ Short</option>
-                  <option value="romantic">💖 Romantic</option>
-                  <option value="philosophical">🧠 Philosophical</option>
-                  <option value="humorous">😄 Humorous</option>
-                </select>
+                <label className="block text-sm font-medium text-pink-200 mb-2">
+                  Context (சூழல்)
+                  <span className="block text-xs text-pink-300/70 mt-1">Mood/style (e.g., கவிதை, காதல், தத்துவம்)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter context (ex: இனிமை)"
+                  value={Context}
+                  onChange={(e) => setContext(e.target.value)}
+                  className="w-full p-4 rounded-xl bg-slate-800/50 border border-pink-500/30 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-400"
+                />
               </div>
 
               <div className="w-full md:w-60">
@@ -744,8 +750,8 @@ export default function MetaphorCreator() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-slate-900/50 rounded-xl p-6 backdrop-blur-sm border border-pink-500/20">
-                    <h4 className="text-sm font-semibold mb-4 text-pink-300">Style Distribution</h4>
-                    <Pie data={getStyleChartData()} />
+                    <h4 className="text-sm font-semibold mb-4 text-pink-300">Context Distribution</h4>
+                    <Pie data={getContextChartData()} />
                   </div>
                   <div className="bg-slate-900/50 rounded-xl p-6 backdrop-blur-sm border border-pink-500/20">
                     <h4 className="text-sm font-semibold mb-4 text-pink-300">Most Used Sources</h4>
@@ -786,45 +792,51 @@ export default function MetaphorCreator() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div
                   className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
-                  onClick={() => handleExampleClick("முத்து", "கண்")}
+                  onClick={() => handleExampleClick("பறவை", "ஆவல்","சுதந்திரம்")}
                 >
-                  <div className="font-medium text-pink-300 group-hover:text-pink-200">முத்து</div>
-                  <div className="text-gray-400 group-hover:text-gray-300">கண்</div>
+                  <div className="font-medium text-pink-300 group-hover:text-pink-200">பறவை</div>
+                  <div className="text-gray-400 group-hover:text-gray-300">ஆவல்</div>
+                  <div className="text-xs text-pink-400/70 mt-1">சுதந்திரம்</div>
                 </div>
                 <div
                   className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
-                  onClick={() => handleExampleClick("தீ", "ஆர்வம்")}
+                  onClick={() => handleExampleClick("கல்", "உணர்வு","தடுப்பு")}
                 >
-                  <div className="font-medium text-pink-300 group-hover:text-pink-200">தீ</div>
-                  <div className="text-gray-400 group-hover:text-gray-300">ஆர்வம்</div>
+                  <div className="font-medium text-pink-300 group-hover:text-pink-200">கல்</div>
+                  <div className="text-gray-400 group-hover:text-gray-300">உணர்வு</div>
+                  <div className="text-xs text-pink-400/70 mt-1">தடுப்பு</div>
                 </div>
                 <div
                   className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
-                  onClick={() => handleExampleClick("சந்திரன்", "கனவு")}
+                  onClick={() => handleExampleClick("நதி", "நினைவுகள்","ஓட்டம்")}
                 >
-                  <div className="font-medium text-pink-300 group-hover:text-pink-200">சந்திரன்</div>
-                  <div className="text-gray-400 group-hover:text-gray-300">கனவு</div>
+                  <div className="font-medium text-pink-300 group-hover:text-pink-200">நதி</div>
+                  <div className="text-gray-400 group-hover:text-gray-300">நினைவுகள்</div>
+                  <div className="text-xs text-pink-400/70 mt-1">ஓட்டம்</div>
                 </div>
                 <div
                   className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
-                  onClick={() => handleExampleClick("மரம்", "மனம்")}
+                  onClick={() => handleExampleClick("விழி", "மனம்","பார்வை")}
                 >
-                  <div className="font-medium text-pink-300 group-hover:text-pink-200">மரம்</div>
+                  <div className="font-medium text-pink-300 group-hover:text-pink-200">விழி</div>
                   <div className="text-gray-400 group-hover:text-gray-300">மனம்</div>
+                  <div className="text-xs text-pink-400/70 mt-1">பார்வை</div>
                 </div>
                 <div
                   className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
-                  onClick={() => handleExampleClick("நட்சத்திரம்", "ஒளி")}
+                  onClick={() => handleExampleClick("தேன்", "பாசம்","இனிமை")}
                 >
-                  <div className="font-medium text-pink-300 group-hover:text-pink-200">நட்சத்திரம்</div>
-                  <div className="text-gray-400 group-hover:text-gray-300">ஒளி</div>
+                  <div className="font-medium text-pink-300 group-hover:text-pink-200">தேன்</div>
+                  <div className="text-gray-400 group-hover:text-gray-300">பாசம்</div>
+                  <div className="text-xs text-pink-400/70 mt-1">இனிமை</div>
                 </div>
                 <div
                   className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
-                  onClick={() => handleExampleClick("கடல்", "நிழல்")}
+                  onClick={() => handleExampleClick("இரவு", "துன்பம்","மறைவு")}
                 >
-                  <div className="font-medium text-pink-300 group-hover:text-pink-200">கடல்</div>
-                  <div className="text-gray-400 group-hover:text-gray-300">நிழல்</div>
+                  <div className="font-medium text-pink-300 group-hover:text-pink-200">இரவு</div>
+                  <div className="text-gray-400 group-hover:text-gray-300">துன்பம்</div>
+                  <div className="text-xs text-pink-400/70 mt-1">மறைவு</div>
                 </div>
               </div>
             </div>
@@ -862,7 +874,8 @@ export default function MetaphorCreator() {
                       </div>
                     ) : (
                       <>
-                        <ul className="space-y-3 text-sm max-h-60 overflow-y-auto pr-1">
+                        <ul className="space-y-3 text-sm max-h-60 overflow-y-auto pr-1 ">
+                          {/* <ul className="space-y-3 text-sm max-h-60 overflow-y-auto pr-1 scrollbar-hide"></ul> */}
                           {metaphorHistory.map((h, i) => (
                             <li
                               key={h.id}
@@ -875,7 +888,7 @@ export default function MetaphorCreator() {
                                 </span>
                                 <div className="flex items-center space-x-2">
                                   <span className="text-xs bg-pink-600/20 px-2 py-1 rounded-lg text-pink-300 border border-pink-500/30">
-                                    {h.style}
+                                    {h.Context}
                                   </span>
                                   <button
                                     onClick={(e) => {
@@ -974,7 +987,15 @@ export default function MetaphorCreator() {
           </div>
 
           <div className="text-xs text-pink-300/70 text-center mt-6 bg-pink-500/10 p-3 rounded-xl border border-pink-500/20">
-            Click any example to use it as your source and target!
+            <div className="font-semibold mb-2">💡 Metaphor Creation Guide:</div>
+            <div className="text-left space-y-1">
+              <div><strong>Vehicle (வாகனம்):</strong> Concrete, tangible concept (பறவை, கல், நதி)</div>
+              <div><strong>Tenor (களம்):</strong> Abstract concept being described (ஆவல், உணர்வு, நினைவு)</div>
+              <div><strong>Context (சூழல்):</strong> Mood/style - கவிதை, காதல், தத்துவம், நகைச்சுவை, etc.</div>
+            </div>
+            <div className="mt-2 text-center">
+              <strong>Quick contexts:</strong> கவிதை | காதல் | தத்துவம் | நகைச்சுவை | சுதந்திரம் | இன்பம்
+            </div>
           </div>
         </div>
       </div>
