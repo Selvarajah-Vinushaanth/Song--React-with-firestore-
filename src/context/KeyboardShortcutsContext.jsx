@@ -23,6 +23,7 @@ export function KeyboardShortcutsProvider({ children }) {
       { key: 'a', description: 'Go to Chat', action: () => navigate('/chat') },
       { key: 'u', description: 'Go to Profile', action: () => navigate('/profile') },
       { key: 'd', description: 'Go to Dashboard', action: () => navigate('/dashboard') },
+      { key: 's', description: 'Go to Subscription', action: () => navigate('/subscription') },
       { key: 'k', description: 'Go to API Keys', action: () => navigate('/api-keys') },
       { key: 'r', description: 'Refresh Page', action: () => window.location.reload() },
       { key: '?', description: 'Show/Hide Keyboard Shortcuts', action: () => setShowShortcutsHelp(prev => !prev) },

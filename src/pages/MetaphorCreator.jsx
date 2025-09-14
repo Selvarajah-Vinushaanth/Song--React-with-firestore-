@@ -8,7 +8,10 @@ import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import Swal from "sweetalert2"
 import { useAuth } from "../context/AuthContext"
+import { usePayment } from "../context/PaymentContext"
 import { db } from "../context/AuthContext"
+import TokenDisplay from "../components/TokenDisplay"
+import TokenCostBanner from "../components/TokenCostBanner"
 import {
   collection,
   addDoc,
@@ -25,6 +28,13 @@ Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Lege
 
 export default function MetaphorCreator() {
   const { currentUser } = useAuth()
+  const { 
+    checkTokensAvailable, 
+    consumeTokens, 
+    remainingTokens: tokens,
+    SERVICE_TOKEN_COSTS 
+  } = usePayment()
+  
   const [source, setSource] = useState("")
   const [target, setTarget] = useState("")
   const [Context, setContext] = useState("")
@@ -268,6 +278,13 @@ export default function MetaphorCreator() {
       setError("Please fill both source and target words.")
       return
     }
+
+    // Check if user has enough tokens (1 token per metaphor generated)
+    if (!checkTokensAvailable(count)) {
+      setError(`Insufficient tokens. You need ${count} tokens (1 per metaphor) but only have ${tokens} tokens. Please upgrade your plan to continue.`)
+      return
+    }
+
     setIsLoading(true)
     setError("")
 
@@ -287,6 +304,9 @@ export default function MetaphorCreator() {
         
         // Save to Firestore history
         await saveToHistory(source, target, Context, response.data.metaphors)
+        
+        // Consume tokens after successful generation (1 token per metaphor)
+        await consumeTokens(count, 'MetaphorCreator')
       } else {
         throw new Error("Invalid response format from server")
       }
@@ -490,6 +510,9 @@ export default function MetaphorCreator() {
         </div>
       </header>
 
+      {/* Token Display and Cost Banner */}
+      
+
       <div className="flex flex-col md:flex-row w-full min-h-screen relative z-10">
         {/* Main Content */}
         <div className="w-full md:w-3/4 p-6 md:p-10 order-2 md:order-1">
@@ -581,10 +604,14 @@ export default function MetaphorCreator() {
 
               <motion.button
                 onClick={handleGenerateMetaphors}
-                disabled={isLoading}
+                disabled={isLoading || tokens < count}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-600 rounded-xl text-white font-semibold hover:from-pink-600 hover:to-rose-700 transition-all duration-300 disabled:opacity-50 shadow-xl hover:shadow-2xl w-full md:w-auto relative overflow-hidden group"
+                className={`px-8 py-4 rounded-xl text-white font-semibold transition-all duration-300 disabled:opacity-50 shadow-xl hover:shadow-2xl w-full md:w-auto relative overflow-hidden group ${
+                  tokens >= count 
+                    ? "bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700" 
+                    : "bg-gradient-to-r from-red-600 to-red-700 cursor-not-allowed"
+                }`}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-rose-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                 {isLoading ? (
@@ -612,10 +639,25 @@ export default function MetaphorCreator() {
                     Generating...
                   </div>
                 ) : (
-                  <span className="relative z-10">Generate Metaphors</span>
+                  <span className="relative z-10">
+                    {tokens >= count 
+                      ? `Generate ${count} Metaphor${count !== 1 ? 's' : ''} (${count} token${count !== 1 ? 's' : ''})`
+                      : `Insufficient Tokens (need ${count})`
+                    }
+                  </span>
                 )}
               </motion.button>
             </div>
+            <div className="relative z-10 px-6 pt-4">
+        <div className="max-w-7xl mx-auto">
+          <TokenDisplay />
+          <TokenCostBanner 
+            serviceName="Metaphor Creator" 
+            cost={count}
+            description={`Cost: ${count} token${count !== 1 ? 's' : ''} (1 per metaphor)`}
+          />
+        </div>
+      </div>
 
             {error && (
               <div className="p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-300 text-sm mb-6 backdrop-blur-sm relative z-10">

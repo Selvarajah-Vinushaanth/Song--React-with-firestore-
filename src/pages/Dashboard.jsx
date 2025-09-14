@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import { useAuth } from '../context/AuthContext'
+import { usePayment } from '../context/PaymentContext'
 import { db } from '../context/AuthContext'
+import TokenDisplay from '../components/TokenDisplay'
 import {
   collection,
   getDocs,
@@ -178,7 +180,7 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white ">
         <Header />
         <div className="container mx-auto px-4 py-10">
           <div className="bg-red-900/30 border border-red-500/40 rounded-xl p-5 max-w-2xl mx-auto text-center">
@@ -242,7 +244,12 @@ export default function Dashboard() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6 mb-10">
+          {/* Token Display Card */}
+          <div className="col-span-2">
+            <TokenDisplay />
+          </div>
+          
           <div className="bg-gradient-to-br from-purple-900/40 to-fuchsia-900/40 p-6 rounded-xl border border-purple-700/40">
             <div className="flex items-center justify-between">
               <div>
@@ -336,6 +343,10 @@ export default function Dashboard() {
               </Link>
               <Link to="/chat" className="flex items-center justify-between p-4 rounded-lg bg-blue-900/30 hover:bg-blue-800/40 border border-blue-700/40">
                 <span className="flex items-center gap-3"><span>💬</span> AI Chat</span>
+                <span>→</span>
+              </Link>
+              <Link to="/subscription" className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-purple-900/30 to-pink-900/30 hover:from-purple-800/40 hover:to-pink-800/40 border border-purple-700/40">
+                <span className="flex items-center gap-3"><span>👑</span> Subscription & Billing</span>
                 <span>→</span>
               </Link>
             </div>

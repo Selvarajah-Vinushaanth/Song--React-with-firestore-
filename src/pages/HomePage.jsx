@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Header from "../components/Header"
+import SubscriptionNav from "../components/SubscriptionNav"
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -212,6 +213,13 @@ export default function HomePage() {
             <span className="text-white font-medium"> cutting-edge AI technology</span>
           </p>
         </div>
+
+        {/* Subscription Navigation */}
+        {currentUser && (
+          <div className="mb-12">
+            <SubscriptionNav variant="card" className="max-w-md mx-auto" />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 ">
           {cards.map((card, index) => (

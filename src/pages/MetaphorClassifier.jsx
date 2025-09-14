@@ -8,6 +8,9 @@ import Swal from "sweetalert2"
 import { FiCopy } from "react-icons/fi"
 import { AiOutlineCheck } from "react-icons/ai"
 import { useAuth } from "../context/AuthContext"
+import { usePayment } from "../context/PaymentContext"
+import TokenDisplay from "../components/TokenDisplay"
+import TokenCostBanner from "../components/TokenCostBanner"
 import { db } from "../context/AuthContext"
 import {
   collection,
@@ -25,6 +28,7 @@ import {
 
 export default function MetaphorClassifier() {
   const { currentUser } = useAuth()
+  const { remainingTokens: tokens, checkTokensAvailable, consumeTokens } = usePayment()
   const [inputText, setInputText] = useState("")
   const [results, setResults] = useState([])
   const [stats, setStats] = useState(null)
@@ -42,6 +46,15 @@ export default function MetaphorClassifier() {
   const [feedback, setFeedback] = useState("")
   const [copiedIndex, setCopiedIndex] = useState(null)
   const pdfRef = useRef()
+
+  // Calculate dynamic token cost based on number of lines
+  const calculateTokenCost = (text) => {
+    if (!text.trim()) return 1 // Minimum 1 token
+    const lines = text.trim().split('\n').filter(line => line.trim() !== '')
+    return Math.max(1, lines.length) // At least 1 token, 1 token per line
+  }
+
+  const currentTokenCost = calculateTokenCost(inputText)
 
   const pageSize = 5
 
@@ -311,6 +324,16 @@ export default function MetaphorClassifier() {
       return
     }
 
+    // Calculate token cost based on number of lines
+    const lines = inputText.trim().split('\n').filter(line => line.trim() !== '')
+    const tokenCost = lines.length
+    
+    // Check if user has enough tokens (1 token per line)
+    if (!checkTokensAvailable(tokenCost)) {
+      setError(`Insufficient tokens. You need ${tokenCost} tokens (1 per line) but only have ${tokens} tokens. Please upgrade your plan to continue.`)
+      return
+    }
+
     setIsLoading(true)
     setError("")
     setResults([])
@@ -381,6 +404,9 @@ export default function MetaphorClassifier() {
 
       // Save to Firestore history
       await saveToHistory(inputText, allResults, finalStats)
+
+      // Consume tokens after successful analysis (1 token per line)
+      await consumeTokens(tokenCost, 'MetaphorClassifier')
 
     } catch (error) {
       setError("Failed to analyze text. Please try again or check if the server is running.")
@@ -557,6 +583,9 @@ export default function MetaphorClassifier() {
         </div>
       </header>
 
+      {/* Token Display and Cost Banner */}
+      
+
       <div className="max-w-full mx-auto p-6 space-y-8 relative z-10">
         {error && (
           <div className="bg-red-900/80 border-l-4 border-red-400 text-red-100 p-4 mb-6 rounded-xl backdrop-blur-sm animate-pulse shadow-lg">
@@ -602,13 +631,23 @@ export default function MetaphorClassifier() {
                 placeholder="Enter Tamil text to analyze for metaphors..."
               />
               <p className="text-xs text-violet-300/70 mt-3 mb-6 italic">
-                You can enter multiple lines of text. Each line will be analyzed separately.
+                You can enter multiple lines of text. Each line will be analyzed separately. 
+                <span className="text-violet-200 font-medium">Cost: 1 token per line</span>
+                {inputText.trim() && (
+                  <span className="ml-2 text-violet-100 bg-violet-800/40 px-2 py-1 rounded">
+                    Current cost: {currentTokenCost} token{currentTokenCost !== 1 ? 's' : ''}
+                  </span>
+                )}
               </p>
 
               <button
-                className="bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-violet-500/30 flex items-center justify-center font-medium text-lg hover:scale-105 transform"
+                className={`px-8 py-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center font-medium text-lg hover:scale-105 transform ${
+                  tokens >= currentTokenCost 
+                    ? 'bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white hover:shadow-violet-500/30' 
+                    : 'bg-gradient-to-r from-red-600 to-red-700 text-white cursor-not-allowed opacity-75'
+                }`}
                 onClick={handleAnalyzeClick}
-                disabled={isLoading}
+                disabled={isLoading || tokens < currentTokenCost}
               >
                 {isLoading ? (
                   <span className="flex items-center">
@@ -648,10 +687,23 @@ export default function MetaphorClassifier() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    Analyze Text
+                    {tokens >= currentTokenCost 
+                      ? `Analyze Text (${currentTokenCost} token${currentTokenCost !== 1 ? 's' : ''})`
+                      : `Insufficient Tokens (need ${currentTokenCost})`
+                    }
                   </>
                 )}
               </button>
+              <div className="relative z-10 px-6 pt-4">
+        <div className="max-w-7xl mx-auto">
+          <TokenDisplay />
+          <TokenCostBanner 
+            serviceName="Metaphor Classifier" 
+            cost={currentTokenCost}
+            description={`Cost: ${currentTokenCost} token${currentTokenCost !== 1 ? 's' : ''} (1 per line)`}
+          />
+        </div>
+      </div>
             </div>
 
             {results.length > 0 && (

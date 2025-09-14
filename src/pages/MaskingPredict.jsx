@@ -6,6 +6,9 @@ import Swal from "sweetalert2"
 import { FiCopy } from "react-icons/fi"
 import { AiOutlineCheck } from "react-icons/ai"
 import { useAuth } from "../context/AuthContext"
+import { usePayment } from "../context/PaymentContext"
+import TokenDisplay from "../components/TokenDisplay"
+import TokenCostBanner from "../components/TokenCostBanner"
 import { useKeyboardShortcuts } from "../context/KeyboardShortcutsContext"
 import { db } from "../context/AuthContext"
 import {
@@ -23,6 +26,7 @@ import {
 
 export default function MaskingPredict() {
   const { currentUser } = useAuth()
+  const { remainingTokens: tokens, checkTokensAvailable, consumeTokens } = usePayment()
   const [inputText, setInputText] = useState("")
   const [suggestions, setSuggestions] = useState([])
   const [multipleMaskSuggestions, setMultipleMaskSuggestions] = useState([]) // New state for multiple masks
@@ -400,6 +404,15 @@ export default function MaskingPredict() {
     return matches ? matches.length : 0
   }
 
+  // Calculate current token cost based on mask count * suggestion count
+  const getCurrentTokenCost = () => {
+    if (!inputText.includes("[mask]")) return 1 // Minimum 1 token
+    const maskCount = countMasks(inputText)
+    return maskCount * count // mask count * suggestion count
+  }
+
+  const currentTokenCost = getCurrentTokenCost()
+
   // Helper function to replace specific mask occurrence
  const replaceMaskAtIndex = (text, words) => {
   let currentIndex = 0
@@ -470,8 +483,15 @@ export default function MaskingPredict() {
       })
       return
     }
-    
+
     const maskCount = countMasks(inputText)
+    const totalTokenCost = maskCount * count // mask count * suggestion count
+    
+    // Check if user has enough tokens
+    if (!checkTokensAvailable(totalTokenCost)) {
+      toast.error(`Insufficient tokens. You need ${totalTokenCost} tokens (${maskCount} mask${maskCount !== 1 ? 's' : ''} × ${count} suggestion${count !== 1 ? 's' : ''}) but only have ${tokens} tokens. Please upgrade your plan to continue.`)
+      return
+    }
     
     setIsLoading(true)
     setRecentSearches((prev) => [inputText, ...prev.filter((s) => s !== inputText)].slice(0, 5))
@@ -504,6 +524,9 @@ export default function MaskingPredict() {
           setIsLoading(false)
           
           await saveToHistory(inputText, data.suggestions)
+          
+          // Consume tokens after successful prediction (mask count * suggestion count)
+          await consumeTokens(totalTokenCost, 'MaskingPredict')
         })
         .catch(async (error) => {
           console.error("Error:", error)
@@ -586,6 +609,9 @@ export default function MaskingPredict() {
           
           // Save to history with multiple mask format
           await saveToHistory(inputText, allSuggestions)
+          
+          // Consume tokens after successful prediction (mask count * suggestion count)
+          await consumeTokens(totalTokenCost, 'MaskingPredict')
         })
         .catch(async (error) => {
           console.error("Error with multiple masks:", error)
@@ -666,6 +692,8 @@ export default function MaskingPredict() {
         </div>
       </header>
 
+     
+
       <div className="max-w-full mx-auto p-6 space-y-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
@@ -721,12 +749,22 @@ export default function MaskingPredict() {
 
               <p className="text-xs text-lime-300/70 mt-3 mb-6 italic">
                 Example: "I [mask] to school" or "She [mask] the book". Select how many word suggestions you want.
+                <span className="text-lime-200 font-medium ml-2">Cost: mask count × suggestion count</span>
+                {inputText.includes("[mask]") && (
+                  <span className="ml-2 text-lime-100 bg-lime-800/40 px-2 py-1 rounded">
+                    Current cost: {currentTokenCost} token{currentTokenCost !== 1 ? 's' : ''} ({countMasks(inputText)} mask{countMasks(inputText) !== 1 ? 's' : ''} × {count} suggestion{count !== 1 ? 's' : ''})
+                  </span>
+                )}
               </p>
 
               <button
-                className="bg-gradient-to-r from-green-600 to-lime-700 hover:from-green-500 hover:to-lime-600 text-white px-8 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-green-500/30 flex items-center justify-center font-medium text-lg hover:scale-105 transform"
+                className={`px-8 py-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center font-medium text-lg hover:scale-105 transform ${
+                  tokens >= currentTokenCost && inputText.includes("[mask]")
+                    ? "bg-gradient-to-r from-green-600 to-lime-700 hover:from-green-500 hover:to-lime-600 text-white hover:shadow-green-500/30"
+                    : "bg-gradient-to-r from-red-600 to-red-700 text-white cursor-not-allowed opacity-75"
+                }`}
                 onClick={handlePredict}
-                disabled={isLoading || !inputText.includes("[mask]")}
+                disabled={isLoading || !inputText.includes("[mask]") || tokens < currentTokenCost}
               >
                 {isLoading ? (
                   <span className="flex items-center">
@@ -755,10 +793,26 @@ export default function MaskingPredict() {
                 ) : (
                   <>
                     <span className="text-2xl mr-3">🕵️‍♂️</span>
-                    Get Suggestions
+                    {tokens >= currentTokenCost && inputText.includes("[mask]")
+                      ? `Get Suggestions (${currentTokenCost} token${currentTokenCost !== 1 ? 's' : ''})`
+                      : !inputText.includes("[mask]")
+                      ? "Add [mask] to text first"
+                      : `Insufficient Tokens (need ${currentTokenCost})`
+                    }
                   </>
                 )}
               </button>
+               {/* Token Display and Cost Banner */}
+      <div className="relative z-10 px-6 pt-4">
+        <div className="max-w-7xl mx-auto">
+          <TokenDisplay />
+          <TokenCostBanner 
+            serviceName="Masking Predict" 
+            cost={currentTokenCost}
+            description={`Cost: ${currentTokenCost} token${currentTokenCost !== 1 ? 's' : ''} (${countMasks(inputText)} mask${countMasks(inputText) !== 1 ? 's' : ''} × ${count} suggestion${count !== 1 ? 's' : ''})`}
+          />
+        </div>
+      </div>
             </div>
 
             {/* Multiple Mask Preview Section */}

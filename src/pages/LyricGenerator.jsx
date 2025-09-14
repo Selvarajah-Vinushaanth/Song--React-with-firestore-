@@ -6,6 +6,9 @@ import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import Swal from "sweetalert2"
 import { useAuth } from "../context/AuthContext"
+import { usePayment } from "../context/PaymentContext"
+import TokenDisplay from "../components/TokenDisplay"
+import TokenCostBanner from "../components/TokenCostBanner"
 import { db } from "../context/AuthContext"
 import {
   collection,
@@ -22,6 +25,7 @@ import {
 
 export default function LyricGenerator() {
   const { currentUser } = useAuth()
+  const { remainingTokens: tokens, checkTokensAvailable, consumeTokens } = usePayment()
   const [motion, setMotion] = useState("calm")
   const [seed, setSeed] = useState("")
   const [generatedLyrics, setGeneratedLyrics] = useState("")
@@ -253,6 +257,12 @@ export default function LyricGenerator() {
   }, [generatedLyrics])
 
   const handleGenerateLyrics = async () => {
+    // Check if user has enough tokens (1 token per lyric generated)
+    if (!checkTokensAvailable(count)) {
+      setError(`Insufficient tokens. You need ${count} tokens (1 per lyric) but only have ${tokens} tokens. Please upgrade your plan to continue.`)
+      return
+    }
+
     setIsLoading(true)
     setError("")
 
@@ -269,6 +279,9 @@ export default function LyricGenerator() {
 
         // Save to Firestore history
         await saveToHistory(seed, motion, response.data.lyrics, count) // Include count in history
+        
+        // Consume tokens after successful generation (1 token per lyric)
+        await consumeTokens(count, 'LyricGenerator')
       } else {
         // Fallback in case of unexpected response format
         const fallbackLyrics = seed ? seed : "இங்கே உங்கள் பாடல் வரிகள் தோன்றும்..."
@@ -423,6 +436,8 @@ export default function LyricGenerator() {
         </div>
       </header>
 
+      
+
       <div className="flex w-full min-h-screen relative">
         {/* Main Content */}
         <div className="flex-1 p-6 relative z-10">
@@ -447,6 +462,7 @@ export default function LyricGenerator() {
           )}
 
           <div className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 space-y-8 backdrop-blur-xl">
+          
             <h2 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
                 <svg
@@ -572,10 +588,12 @@ export default function LyricGenerator() {
               className={`w-full ${
                 isLoading
                   ? "bg-gray-600/50 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02]"
+                  : tokens >= count
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02]"
+                  : "bg-gradient-to-r from-red-600 to-red-700 cursor-not-allowed opacity-75"
               } text-white px-8 py-6 rounded-2xl transition-all duration-300 shadow-xl flex items-center justify-center space-x-3 font-semibold text-lg backdrop-blur-sm`}
               onClick={handleGenerateLyrics}
-              disabled={isLoading}
+              disabled={isLoading || tokens < count}
             >
               {isLoading ? (
                 <>
@@ -617,11 +635,27 @@ export default function LyricGenerator() {
                       d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
                     />
                   </svg>
-                  <span>Generate Lyrics</span>
+                  <span>
+                    {tokens >= count 
+                      ? `Generate ${count} Lyric${count !== 1 ? 's' : ''} (${count} token${count !== 1 ? 's' : ''})`
+                      : `Insufficient Tokens (need ${count})`
+                    }
+                  </span>
                   <div className="w-2 h-2 bg-blue-300 rounded-full animate-pulse"></div>
                 </>
               )}
             </button>
+            {/* Token Display and Cost Banner */}
+      <div className="relative z-10 px-6 pt-4">
+        <div className="max-w-7xl mx-auto">
+          <TokenDisplay />
+          <TokenCostBanner 
+            serviceName="Lyric Generator" 
+            cost={count}
+            description={`Cost: ${count} token${count !== 1 ? 's' : ''} (1 per lyric)`}
+          />
+        </div>
+      </div>
           </div>
 
           {/* Enhanced Output Section */}
