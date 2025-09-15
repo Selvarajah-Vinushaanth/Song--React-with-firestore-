@@ -663,23 +663,23 @@ export default function MaskingPredict() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 via-lime-900 to-black text-gray-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-gray-100 relative overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
       {/* Decorative gradient circles */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-green-600/20 to-lime-600/20 rounded-full blur-3xl animate-pulse opacity-70"></div>
-      <div className="absolute bottom-40 right-20 w-80 h-80 bg-gradient-to-r from-emerald-600/20 to-lime-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "2s" }}></div>
-      <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-green-600/20 to-lime-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
+      <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-600/20 to-gray-600/20 rounded-full blur-3xl animate-pulse opacity-70"></div>
+      <div className="absolute bottom-40 right-20 w-80 h-80 bg-gradient-to-r from-gray-600/20 to-blue-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "2s" }}></div>
+      <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-slate-600/20 to-gray-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
 
       <ToastContainer />
-      <header className="bg-gradient-to-r from-green-900/90 via-lime-800/90 to-green-900/90 backdrop-blur-xl text-white p-6 shadow-2xl border-b border-green-700/30">
+      <header className="bg-gradient-to-r from-gray-900/90 via-slate-800/90 to-gray-900/90 backdrop-blur-xl text-white p-6 shadow-2xl border-b border-gray-700/30">
         <div className="max-w-full mx-auto px-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-green-200 to-lime-200 bg-clip-text text-transparent">
-              Masking <span className="text-lime-300">Predict</span>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-200 to-blue-200 bg-clip-text text-transparent">
+              Masking <span className="text-blue-300">Predict</span>
             </h1>
             <Link
               to="/"
-              className="bg-green-900/30 hover:bg-green-800/40 px-6 py-3 rounded-xl transition-all duration-300 border border-green-600/30 shadow-lg hover:shadow-green-500/20 backdrop-blur-sm"
+              className="bg-gray-900/30 hover:bg-gray-800/40 px-6 py-3 rounded-xl transition-all duration-300 border border-gray-600/30 shadow-lg hover:shadow-blue-500/20 backdrop-blur-sm"
             >
               <span className="flex items-center space-x-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -697,18 +697,18 @@ export default function MaskingPredict() {
       <div className="max-w-full mx-auto p-6 space-y-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <div className="bg-gradient-to-br from-slate-800/80 via-green-900/40 to-lime-900/60 backdrop-blur-xl border border-green-700/30 rounded-2xl shadow-2xl p-8 mb-8 transition-all duration-300 hover:shadow-green-500/20 hover:border-green-600/50">
+            <div className="bg-gradient-to-br from-slate-800/80 via-gray-900/40 to-slate-900/60 backdrop-blur-xl border border-gray-700/30 rounded-2xl shadow-2xl p-8 mb-8 transition-all duration-300 hover:shadow-blue-500/20 hover:border-gray-600/50">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-lime-100 flex items-center">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+                <h2 className="text-2xl font-bold text-gray-100 flex items-center">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                     <span className="text-2xl">🕵️‍♂️</span>
                   </div>
                   Enter Sentence with [mask]
                 </h2>
                 {isLoading && (
-                  <span className="text-xs bg-green-800/40 text-lime-200 px-3 py-2 rounded-full animate-pulse border border-green-600/30 backdrop-blur-sm">
+                  <span className="text-xs bg-gray-800/40 text-gray-200 px-3 py-2 rounded-full animate-pulse border border-gray-600/30 backdrop-blur-sm">
                     <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-lime-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
                       <span>Processing...</span>
                     </div>
                   </span>
@@ -718,9 +718,9 @@ export default function MaskingPredict() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 {/* Input field */}
                 <div className="md:col-span-3 space-y-2">
-                  <label className="block text-sm font-medium text-lime-200">Sentence with [mask]</label>
+                  <label className="block text-sm font-medium text-gray-200">Sentence with [mask]</label>
                   <input
-                    className="w-full border border-green-600/30 bg-slate-800/70 text-lime-50 rounded-xl p-4 font-tamil focus:ring-2 focus:ring-green-500 focus:border-green-400 transition-all shadow-inner backdrop-blur-sm placeholder-lime-300/50 text-lg"
+                    className="w-full border border-gray-600/30 bg-slate-800/70 text-gray-50 rounded-xl p-4 font-tamil focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all shadow-inner backdrop-blur-sm placeholder-gray-300/50 text-lg"
                     value={inputText}
                     onChange={e => setInputText(e.target.value)}
                     placeholder="Type a sentence with [mask]..."
@@ -729,9 +729,9 @@ export default function MaskingPredict() {
 
                 {/* Count Selection */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-lime-200">Number of Suggestions</label>
+                  <label className="block text-sm font-medium text-gray-200">Number of Suggestions</label>
                   <select
-                    className="w-full bg-slate-800/70 text-lime-50 rounded-xl border border-green-600/30 px-4 py-4 focus:ring-2 focus:ring-green-500 focus:border-green-400 transition-all shadow-inner backdrop-blur-sm"
+                    className="w-full bg-slate-800/70 text-gray-50 rounded-xl border border-gray-600/30 px-4 py-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all shadow-inner backdrop-blur-sm"
                     value={count}
                     onChange={(e) => setCount(parseInt(e.target.value))}
                   >
@@ -747,11 +747,11 @@ export default function MaskingPredict() {
                 </div>
               </div>
 
-              <p className="text-xs text-lime-300/70 mt-3 mb-6 italic">
+              <p className="text-xs text-gray-300/70 mt-3 mb-6 italic">
                 Example: "I [mask] to school" or "She [mask] the book". Select how many word suggestions you want.
-                <span className="text-lime-200 font-medium ml-2">Cost: mask count × suggestion count</span>
+                <span className="text-gray-200 font-medium ml-2">Cost: mask count × suggestion count</span>
                 {inputText.includes("[mask]") && (
-                  <span className="ml-2 text-lime-100 bg-lime-800/40 px-2 py-1 rounded">
+                  <span className="ml-2 text-gray-100 bg-gray-800/40 px-2 py-1 rounded">
                     Current cost: {currentTokenCost} token{currentTokenCost !== 1 ? 's' : ''} ({countMasks(inputText)} mask{countMasks(inputText) !== 1 ? 's' : ''} × {count} suggestion{count !== 1 ? 's' : ''})
                   </span>
                 )}
@@ -760,7 +760,7 @@ export default function MaskingPredict() {
               <button
                 className={`px-8 py-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center font-medium text-lg hover:scale-105 transform ${
                   tokens >= currentTokenCost && inputText.includes("[mask]")
-                    ? "bg-gradient-to-r from-green-600 to-lime-700 hover:from-green-500 hover:to-lime-600 text-white hover:shadow-green-500/30"
+                    ? "bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-500 hover:to-slate-600 text-white hover:shadow-blue-500/30"
                     : "bg-gradient-to-r from-red-600 to-red-700 text-white cursor-not-allowed opacity-75"
                 }`}
                 onClick={handlePredict}
@@ -817,10 +817,10 @@ export default function MaskingPredict() {
 
             {/* Multiple Mask Preview Section */}
             {multipleMaskSuggestions.length > 0 && (
-              <div className="mb-8 p-6 bg-gradient-to-br from-slate-800/70 via-green-900/30 to-lime-900/50 backdrop-blur-xl rounded-2xl border border-green-700/30 shadow-2xl">
+              <div className="mb-8 p-6 bg-gradient-to-br from-slate-800/70 via-gray-900/30 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-gray-700/30 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-green-200 to-lime-200 bg-clip-text text-transparent flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-200 to-blue-200 bg-clip-text text-transparent flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                       <span className="text-xl">🎯</span>
                     </div>
                     Preview & Select Words
@@ -852,12 +852,12 @@ export default function MaskingPredict() {
                 </div>
 
                 {/* Preview Sentence */}
-                <div className="mb-6 p-4 bg-slate-800/50 rounded-xl border border-green-600/30">
-                  <label className="block text-sm font-medium text-lime-200 mb-2">Preview Sentence:</label>
-                  <p className="text-xl font-tamil text-lime-50 leading-relaxed">
+                <div className="mb-6 p-4 bg-slate-800/50 rounded-xl border border-gray-600/30">
+                  <label className="block text-sm font-medium text-gray-200 mb-2">Preview Sentence:</label>
+                  <p className="text-xl font-tamil text-gray-50 leading-relaxed">
                     {previewSentence || inputText}
                   </p>
-                  <div className="mt-2 text-xs text-lime-300/70">
+                  <div className="mt-2 text-xs text-gray-300/70">
                     Click on suggestions below to fill in the masks
                   </div>
                 </div>
@@ -865,9 +865,9 @@ export default function MaskingPredict() {
                 {/* Multiple Mask Suggestions */}
                 <div className="space-y-6">
                   {multipleMaskSuggestions.map((maskSuggestions, maskIndex) => (
-                    <div key={`mask-section-${maskIndex}`} className="border border-green-700/30 rounded-xl p-4 bg-gradient-to-br from-green-900/20 to-lime-800/20">
+                    <div key={`mask-section-${maskIndex}`} className="border border-gray-700/30 rounded-xl p-4 bg-gradient-to-br from-gray-900/20 to-slate-800/20">
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-lime-100">
+                        <h3 className="text-lg font-bold text-gray-100">
                           Mask {maskIndex + 1} Suggestions
                           {selectedWords[maskIndex] && (
                             <span className="ml-2 text-sm bg-emerald-800/50 text-emerald-200 px-2 py-1 rounded-lg">
@@ -893,8 +893,8 @@ export default function MaskingPredict() {
                             onClick={() => handleWordSelection(maskIndex, word)}
                             className={`p-3 rounded-lg border transition-all duration-300 text-left ${
                               selectedWords[maskIndex] === word
-                                ? 'bg-emerald-700/50 border-emerald-500 text-emerald-100 shadow-lg'
-                                : 'bg-slate-700/30 border-lime-600/30 text-lime-200 hover:bg-lime-800/30 hover:border-lime-500/50 hover:scale-105'
+                                ? 'bg-blue-700/50 border-blue-500 text-blue-100 shadow-lg'
+                                : 'bg-slate-700/30 border-gray-600/30 text-gray-200 hover:bg-gray-800/30 hover:border-gray-500/50 hover:scale-105'
                             }`}
                           >
                             <div className="font-medium">{word}</div>
@@ -909,14 +909,14 @@ export default function MaskingPredict() {
                 </div>
 
                 {/* Progress indicator */}
-                <div className="mt-6 pt-4 border-t border-green-700/30">
+                <div className="mt-6 pt-4 border-t border-gray-700/30">
                   <div className="flex justify-between items-center">
-                    <div className="text-sm text-lime-200">
-                      Progress: <span className="font-bold text-lime-300">
+                    <div className="text-sm text-gray-200">
+                      Progress: <span className="font-bold text-blue-300">
                         {selectedWords.filter(word => word !== null).length}
                       </span> of <span className="font-bold text-white">{multipleMaskSuggestions.length}</span> masks filled
                     </div>
-                    <div className="text-xs text-lime-300/70">
+                    <div className="text-xs text-gray-300/70">
                       {selectedWords.filter(word => word !== null).length === multipleMaskSuggestions.length 
                         ? "✅ All masks completed!" 
                         : `${multipleMaskSuggestions.length - selectedWords.filter(word => word !== null).length} masks remaining`
@@ -927,7 +927,7 @@ export default function MaskingPredict() {
                   {/* Progress bar */}
                   <div className="mt-2 w-full bg-slate-700 rounded-full h-2">
                     <div 
-                      className="bg-gradient-to-r from-emerald-500 to-lime-500 h-2 rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-blue-500 to-slate-500 h-2 rounded-full transition-all duration-500"
                       style={{ 
                         width: `${(selectedWords.filter(word => word !== null).length / multipleMaskSuggestions.length) * 100}%` 
                       }}
@@ -939,10 +939,10 @@ export default function MaskingPredict() {
 
             {/* Single Mask Suggestions (existing code) */}
             {suggestions.length > 0 && multipleMaskSuggestions.length === 0 && (
-              <div className="mb-8 p-6 bg-gradient-to-br from-slate-800/70 via-green-900/30 to-lime-900/50 backdrop-blur-xl rounded-2xl border border-green-700/30 shadow-2xl">
+              <div className="mb-8 p-6 bg-gradient-to-br from-slate-800/70 via-gray-900/30 to-slate-900/50 backdrop-blur-xl rounded-2xl border border-gray-700/30 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-green-200 to-lime-200 bg-clip-text text-transparent flex items-center">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-200 to-blue-200 bg-clip-text text-transparent flex items-center">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                       <span className="text-2xl">🎯</span>
                     </div>
                     Suggestions
@@ -952,12 +952,12 @@ export default function MaskingPredict() {
                   <div className="flex flex-wrap gap-3">
                     <button
                       onClick={copyAllSuggestions}
-                      className="flex items-center space-x-2 bg-gradient-to-r from-emerald-600/50 to-teal-600/50 hover:from-emerald-500/60 hover:to-teal-500/60 text-emerald-100 px-4 py-2 rounded-lg transition-all duration-300 border border-emerald-500/30 text-sm"
+                      className="flex items-center space-x-2 bg-gradient-to-r from-blue-600/50 to-slate-600/50 hover:from-blue-500/60 hover:to-slate-500/60 text-blue-100 px-4 py-2 rounded-lg transition-all duration-300 border border-blue-500/30 text-sm"
                     >
                       {copyAllStatus ? (
-                        <AiOutlineCheck className="text-emerald-300 text-lg" />
+                        <AiOutlineCheck className="text-blue-300 text-lg" />
                       ) : (
-                        <FiCopy className="text-emerald-200 hover:text-emerald-100 text-lg" />
+                        <FiCopy className="text-blue-200 hover:text-blue-100 text-lg" />
                       )}
                       <span>{copyAllStatus ? "Copied All!" : "Copy All"}</span>
                     </button>
@@ -965,19 +965,19 @@ export default function MaskingPredict() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => exportSuggestions("txt")}
-                        className="px-3 py-2 bg-green-600/20 hover:bg-green-600/40 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-green-500/30 text-green-200"
+                        className="px-3 py-2 bg-gray-600/20 hover:bg-gray-600/40 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-gray-500/30 text-gray-200"
                       >
                         Export TXT
                       </button>
                       <button
                         onClick={() => exportSuggestions("csv")}
-                        className="px-3 py-2 bg-green-600/20 hover:bg-green-600/40 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-green-500/30 text-green-200"
+                        className="px-3 py-2 bg-gray-600/20 hover:bg-gray-600/40 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-gray-500/30 text-gray-200"
                       >
                         Export CSV
                       </button>
                       <button
                         onClick={() => exportSuggestions("json")}
-                        className="px-3 py-2 bg-green-600/20 hover:bg-green-600/40 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-green-500/30 text-green-200"
+                        className="px-3 py-2 bg-gray-600/20 hover:bg-gray-600/40 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-gray-500/30 text-gray-200"
                       >
                         Export JSON
                       </button>
@@ -989,29 +989,29 @@ export default function MaskingPredict() {
                   {suggestions.map((word, idx) => (
                     <div
                       key={idx}
-                      className="border-l-4 p-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl backdrop-blur-sm border-lime-400 bg-gradient-to-br from-green-900/40 to-lime-800/30 hover:border-lime-300"
+                      className="border-l-4 p-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl backdrop-blur-sm border-blue-400 bg-gradient-to-br from-gray-900/40 to-slate-800/30 hover:border-blue-300"
                     >
                       <div className="flex justify-between items-start mb-3">
-                        <p className="font-tamil text-lime-50 leading-relaxed flex-1 text-lg">
+                        <p className="font-tamil text-gray-50 leading-relaxed flex-1 text-lg">
                           {inputText.replace("[mask]", word)}
                         </p>
                         <button
                           onClick={() => copyIndividualSuggestion(word, idx)}
-                          className="ml-4 text-lime-300 hover:text-lime-200 transition-colors flex items-center p-2 rounded-lg hover:bg-lime-800/30"
+                          className="ml-4 text-gray-300 hover:text-gray-200 transition-colors flex items-center p-2 rounded-lg hover:bg-gray-800/30"
                           title="Copy complete sentence"
                         >
                           {copiedIndex === idx ? (
-                            <AiOutlineCheck className="text-emerald-400 text-lg" />
+                            <AiOutlineCheck className="text-blue-400 text-lg" />
                           ) : (
-                            <FiCopy className="text-lime-300 hover:text-lime-200 text-lg" />
+                            <FiCopy className="text-gray-300 hover:text-gray-200 text-lg" />
                           )}
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="px-3 py-1 rounded-lg font-medium text-sm border bg-lime-800/50 text-lime-200 border-lime-600/30">
+                        <span className="px-3 py-1 rounded-lg font-medium text-sm border bg-gray-800/50 text-gray-200 border-gray-600/30">
                           Suggestion {idx + 1}
                         </span>
-                        <div className="text-xs text-lime-300/70 bg-green-800/30 px-2 py-1 rounded-lg border border-green-600/30">
+                        <div className="text-xs text-gray-300/70 bg-gray-800/30 px-2 py-1 rounded-lg border border-gray-600/30">
                           "{word}"
                         </div>
                       </div>
@@ -1020,11 +1020,11 @@ export default function MaskingPredict() {
                 </div>
                 
                 {/* Summary section */}
-                <div className="mt-6 pt-4 border-t border-green-700/30 flex justify-between items-center">
-                  <div className="text-sm text-lime-200">
-                    Showing <span className="font-bold text-lime-300">{suggestions.length}</span> suggestions for your masked sentence
+                <div className="mt-6 pt-4 border-t border-gray-700/30 flex justify-between items-center">
+                  <div className="text-sm text-gray-200">
+                    Showing <span className="font-bold text-blue-300">{suggestions.length}</span> suggestions for your masked sentence
                   </div>
-                  <div className="text-xs text-lime-300/70">
+                  <div className="text-xs text-gray-300/70">
                     Original: "{inputText}"
                   </div>
                 </div>
@@ -1033,9 +1033,9 @@ export default function MaskingPredict() {
           </div>
 
           <div className="lg:col-span-1 space-y-8">
-            <div className="bg-gradient-to-br from-slate-800/70 via-green-900/30 to-lime-900/50 backdrop-blur-xl border border-green-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-green-500/20 sticky top-6">
-              <h2 className="text-xl font-bold mb-6 text-lime-100 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-800/70 via-gray-900/30 to-slate-900/50 backdrop-blur-xl border border-gray-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-blue-500/20 sticky top-6">
+              <h2 className="text-xl font-bold mb-6 text-gray-100 flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                   <span className="text-2xl">🕵️‍♂️</span>
                 </div>
                 Examples
@@ -1044,18 +1044,18 @@ export default function MaskingPredict() {
                 {examples.map((example, index) => (
                   <div
                     key={index}
-                    className="border border-lime-600/30 rounded-xl p-4 cursor-pointer hover:bg-lime-800/20 transition-all duration-300 hover:shadow-lg hover:border-lime-500/50 hover:scale-105 transform"
+                    className="border border-gray-600/30 rounded-xl p-4 cursor-pointer hover:bg-gray-800/20 transition-all duration-300 hover:shadow-lg hover:border-gray-500/50 hover:scale-105 transform"
                     onClick={() => handleExampleClick(example)}
                   >
-                    <p className="font-tamil text-lime-50 leading-relaxed">{example}</p>
+                    <p className="font-tamil text-gray-50 leading-relaxed">{example}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/70 via-green-900/30 to-lime-900/50 backdrop-blur-xl border border-green-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-green-500/20">
-              <h2 className="text-xl font-bold mb-6 text-lime-100 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-800/70 via-gray-900/30 to-slate-900/50 backdrop-blur-xl border border-gray-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-blue-500/20">
+              <h2 className="text-xl font-bold mb-6 text-gray-100 flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                   <span className="text-2xl">🕵️‍♂️</span>
                 </div>
                 Recent Predictions
@@ -1063,19 +1063,19 @@ export default function MaskingPredict() {
               {currentUser ? (
                 maskingHistory.length > 0 ? (
                   <>
-                    <ul className="space-y-3 text-lime-200 text-sm">
+                    <ul className="space-y-3 text-gray-200 text-sm">
                       {maskingHistory.map((historyItem, index) => (
                         <li
                           key={historyItem.id}
-                          className="flex justify-between items-center bg-slate-700/30 hover:bg-lime-800/30 transition-all duration-300 rounded-lg px-4 py-3 border border-lime-600/20 cursor-pointer"
+                          className="flex justify-between items-center bg-slate-700/30 hover:bg-gray-800/30 transition-all duration-300 rounded-lg px-4 py-3 border border-gray-600/20 cursor-pointer"
                           onClick={() => loadFromHistory(historyItem)}
                         >
                           <div className="flex-1">
-                            <span className="cursor-pointer hover:text-lime-300 transition flex-1 mr-3">
+                            <span className="cursor-pointer hover:text-blue-300 transition flex-1 mr-3">
                               {historyItem.inputText.length > 30 ? `${historyItem.inputText.slice(0, 30)}...` : historyItem.inputText}
                             </span>
                             <div className="flex items-center gap-2 mt-1">
-                              <div className="text-xs text-lime-300/70">
+                              <div className="text-xs text-gray-300/70">
                                 {historyItem.timestamp?.toLocaleDateString()}
                               </div>
                               {historyItem.isMultipleMask && (
@@ -1121,48 +1121,48 @@ export default function MaskingPredict() {
                     </button>
                   </>
                 ) : (
-                  <p className="text-lime-300/70">No recent predictions. Start making predictions to see your history here!</p>
+                  <p className="text-gray-300/70">No recent predictions. Start making predictions to see your history here!</p>
                 )
               ) : (
-                <p className="text-lime-300/70">Please log in to see your prediction history.</p>
+                <p className="text-gray-300/70">Please log in to see your prediction history.</p>
               )}
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/70 via-green-900/30 to-lime-900/50 backdrop-blur-xl border border-green-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-green-500/20">
-              <h2 className="text-xl font-bold mb-6 text-lime-100 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-800/70 via-gray-900/30 to-slate-900/50 backdrop-blur-xl border border-gray-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-blue-500/20">
+              <h2 className="text-xl font-bold mb-6 text-gray-100 flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                   <span className="text-2xl">🕵️‍♂️</span>
                 </div>
                 Tips for Using
               </h2>
-              <ul className="space-y-3 text-lime-200 text-sm">
-                <li className="flex items-center p-2 rounded-lg bg-lime-800/20">
+              <ul className="space-y-3 text-gray-200 text-sm">
+                <li className="flex items-center p-2 rounded-lg bg-gray-800/20">
                   Enter a sentence with [mask] to get suggestions.
                 </li>
-                <li className="flex items-center p-2 rounded-lg bg-green-800/20">
+                <li className="flex items-center p-2 rounded-lg bg-blue-800/20">
                   Click on examples to auto-fill the input.
                 </li>
-                <li className="flex items-center p-2 rounded-lg bg-yellow-800/20">
+                <li className="flex items-center p-2 rounded-lg bg-slate-800/20">
                   Suggestions are context-aware and may vary.
                 </li>
               </ul>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/70 via-green-900/30 to-lime-900/50 backdrop-blur-xl border border-green-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-green-500/20">
-              <h2 className="text-xl font-bold mb-6 text-lime-100 flex items-center">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mr-3 shadow-lg">
+            <div className="bg-gradient-to-br from-slate-800/70 via-gray-900/30 to-slate-900/50 backdrop-blur-xl border border-gray-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-blue-500/20">
+              <h2 className="text-xl font-bold mb-6 text-gray-100 flex items-center">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-slate-600 flex items-center justify-center mr-3 shadow-lg">
                   <span className="text-2xl">🕵️‍♂️</span>
                 </div>
                 Feedback
               </h2>
               <textarea
-                className="w-full bg-slate-800/70 border border-lime-600/30 text-lime-50 rounded-xl p-4 text-sm shadow-inner backdrop-blur-sm placeholder-lime-300/50 focus:ring-2 focus:ring-green-500 focus:border-green-400 transition-all duration-300 h-40 resize-none"
+                className="w-full bg-slate-800/70 border border-gray-600/30 text-gray-50 rounded-xl p-4 text-sm shadow-inner backdrop-blur-sm placeholder-gray-300/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 h-40 resize-none"
                 placeholder="Share your feedback..."
                 value={feedback}
                 onChange={e => setFeedback(e.target.value)}
               />
               <button
-                className="mt-6 bg-gradient-to-r from-green-600 to-lime-700 hover:from-green-500 hover:to-lime-600 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-green-500/30 flex items-center justify-center font-medium text-lg hover:scale-105 transform"
+                className="mt-6 bg-gradient-to-r from-blue-600 to-slate-700 hover:from-blue-500 hover:to-slate-600 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center font-medium text-lg hover:scale-105 transform"
                 onClick={handleFeedbackSubmit}
               >
                 Submit Feedback
@@ -1171,17 +1171,17 @@ export default function MaskingPredict() {
           </div>
         </div>
 
-        <footer className="mt-12 py-8 text-center text-lime-200/70 text-sm border-t border-green-700/30 bg-slate-900/30 backdrop-blur-sm">
+        <footer className="mt-12 py-8 text-center text-gray-200/70 text-sm border-t border-gray-700/30 bg-slate-900/30 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-4">
               <div className="flex items-center">
-                <span className="text-lime-400 mr-2 text-xl">🕵️‍♂️</span>
+                <span className="text-blue-400 mr-2 text-xl">🕵️‍♂️</span>
                 <span>Masking Predict &copy; 2025</span>
               </div>
               <span className="hidden md:inline">|</span>
               <div>Created by Group-23</div>
             </div>
-            <p className="mt-3 text-lime-300/70 text-xs">Powered by context-aware AI</p>
+            <p className="mt-3 text-gray-300/70 text-xs">Powered by context-aware AI</p>
           </div>
         </footer>
       </div>

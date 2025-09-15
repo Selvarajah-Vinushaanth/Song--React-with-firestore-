@@ -553,7 +553,7 @@ export default function MetaphorClassifier() {
   }, [results, stats])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-gray-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-950 to-gray-950 text-gray-100 relative overflow-hidden">
       {/* Grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8b5cf612_1px,transparent_1px),linear-gradient(to_bottom,#8b5cf612_1px,transparent_1px)] bg-[size:24px_24px]"></div>
       {/* Decorative gradient circles (violet/purple theme) */}
@@ -562,7 +562,7 @@ export default function MetaphorClassifier() {
       <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-purple-600/20 to-violet-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
 
       <ToastContainer />
-      <header className="bg-gradient-to-r from-violet-900/90 via-purple-800/90 to-violet-900/90 backdrop-blur-xl text-white p-6 shadow-2xl border-b border-violet-700/30">
+      <header className="bg-gradient-to-r from-violet-950/90 via-purple-800/90 to-violet-950/90 backdrop-blur-xl text-white p-6 shadow-2xl border-b border-violet-700/30">
         <div className="max-w-full mx-auto px-6">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-200 to-purple-200 bg-clip-text text-transparent">
@@ -570,7 +570,7 @@ export default function MetaphorClassifier() {
             </h1>
             <Link
               to="/"
-              className="bg-violet-900/30 hover:bg-violet-800/40 px-6 py-3 rounded-xl transition-all duration-300 border border-violet-600/30 shadow-lg hover:shadow-violet-500/20 backdrop-blur-sm"
+              className="bg-violet-950/30 hover:bg-violet-800/40 px-6 py-3 rounded-xl transition-all duration-300 border border-violet-600/30 shadow-lg hover:shadow-violet-500/20 backdrop-blur-sm"
             >
               <span className="flex items-center space-x-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -588,14 +588,14 @@ export default function MetaphorClassifier() {
 
       <div className="max-w-full mx-auto p-6 space-y-8 relative z-10">
         {error && (
-          <div className="bg-red-900/80 border-l-4 border-red-400 text-red-100 p-4 mb-6 rounded-xl backdrop-blur-sm animate-pulse shadow-lg">
+          <div className="bg-red-950/80 border-l-4 border-red-400 text-red-100 p-4 mb-6 rounded-xl backdrop-blur-sm animate-pulse shadow-lg">
             <p>{error}</p>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <div className="bg-gradient-to-br from-slate-800/80 via-violet-900/40 to-purple-900/60 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 mb-8 transition-all duration-300 hover:shadow-violet-500/20 hover:border-violet-600/50">
+            <div className="bg-gradient-to-br from-slate-800/80 via-violet-950/40 to-purple-950/60 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 mb-8 transition-all duration-300 hover:shadow-violet-500/20 hover:border-violet-600/50">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-violet-100 flex items-center">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
@@ -707,7 +707,7 @@ export default function MetaphorClassifier() {
             </div>
 
             {results.length > 0 && (
-              <div className="mb-8 p-6 bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl rounded-2xl border border-violet-700/30 shadow-2xl">
+              <div className="mb-8 p-6 bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl rounded-2xl border border-violet-700/30 shadow-2xl">
                 <div className="flex flex-wrap gap-6 items-center justify-between">
                   {/* Filter by Label */}
                   <div className="flex flex-col space-y-2">
@@ -877,7 +877,7 @@ export default function MetaphorClassifier() {
             )}
 
             {viewMode === "card" && Array.isArray(pagedResults) && pagedResults.length > 0 && (
-              <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-violet-500/20">
+              <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-violet-500/20">
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-3xl font-bold bg-gradient-to-r from-violet-200 to-purple-200 bg-clip-text text-transparent flex items-center">
                     Analysis Results
@@ -906,7 +906,7 @@ export default function MetaphorClassifier() {
                         className={`border-l-4 p-6 rounded-xl shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl backdrop-blur-sm
         ${
           result.label === "Metaphor"
-            ? "border-violet-400 bg-gradient-to-br from-violet-900/40 to-purple-800/30 hover:border-violet-300"
+            ? "border-violet-400 bg-gradient-to-br from-violet-950/40 to-purple-800/30 hover:border-violet-300"
             : "border-slate-400 bg-slate-800/40 hover:border-slate-300"
         }`}
                       >
@@ -974,7 +974,7 @@ export default function MetaphorClassifier() {
             )}
 
             {viewMode === "table" && Array.isArray(sortedResults) && sortedResults.length > 0 && (
-              <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 overflow-x-auto transition-all duration-300 hover:shadow-violet-500/20">
+              <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 overflow-x-auto transition-all duration-300 hover:shadow-violet-500/20">
                 <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-violet-200 to-purple-200 bg-clip-text text-transparent flex items-center">
                   Tabular View
                 </h2>
@@ -1001,7 +1001,7 @@ export default function MetaphorClassifier() {
                       return (
                         <tr
                           key={idx}
-                          className={`${result.label === "Metaphor" ? "bg-violet-900/20 hover:bg-violet-800/30" : "hover:bg-slate-800/50"} transition-all duration-300`}
+                          className={`${result.label === "Metaphor" ? "bg-violet-950/20 hover:bg-violet-800/30" : "hover:bg-slate-800/50"} transition-all duration-300`}
                         >
                           <td className="px-6 py-4 font-semibold text-violet-200">{(page - 1) * pageSize + idx + 1}</td>
                           <td className="px-6 py-4 font-tamil text-violet-50 flex justify-between items-center">
@@ -1066,7 +1066,7 @@ export default function MetaphorClassifier() {
             )}
 
             {stats && (
-              <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-violet-500/20 mt-8">
+              <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-8 transition-all duration-300 hover:shadow-violet-500/20 mt-8">
                 <h2 className="text-3xl font-bold mb-8 text-white flex items-center justify-between">
                   <span className="flex items-center">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-4 shadow-lg">
@@ -1084,7 +1084,7 @@ export default function MetaphorClassifier() {
                       Analysis Dashboard
                     </span>
                   </span>
-                  <span className="text-sm text-violet-300 bg-violet-900/30 px-3 py-1 rounded-lg border border-violet-600/30">
+                  <span className="text-sm text-violet-300 bg-violet-950/30 px-3 py-1 rounded-lg border border-violet-600/30">
                     Updated {new Date().toLocaleDateString()}
                   </span>
                 </h2>
@@ -1092,7 +1092,7 @@ export default function MetaphorClassifier() {
                 <div className="space-y-10">
                   {/* Summary cards */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="bg-gradient-to-br from-violet-800/40 to-purple-900/40 rounded-xl p-6 border border-violet-600/30 hover:scale-105 transition-all duration-300 shadow-lg">
+                    <div className="bg-gradient-to-br from-violet-800/40 to-purple-950/40 rounded-xl p-6 border border-violet-600/30 hover:scale-105 transition-all duration-300 shadow-lg">
                       <div className="text-4xl font-bold text-violet-200">{stats?.metaphor_count || 0}</div>
                       <div className="text-sm text-violet-300/80">Metaphors</div>
                     </div>
@@ -1100,11 +1100,11 @@ export default function MetaphorClassifier() {
                       <div className="text-4xl font-bold text-slate-200">{stats?.literal_count || 0}</div>
                       <div className="text-sm text-slate-300/80">Literal</div>
                     </div>
-                    <div className="bg-gradient-to-br from-indigo-800/40 to-purple-900/40 rounded-xl p-6 border border-indigo-600/30 hover:scale-105 transition-all duration-300 shadow-lg">
+                    <div className="bg-gradient-to-br from-indigo-800/40 to-purple-950/40 rounded-xl p-6 border border-indigo-600/30 hover:scale-105 transition-all duration-300 shadow-lg">
                       <div className="text-4xl font-bold text-indigo-200">{stats?.total_sentences || 0}</div>
                       <div className="text-sm text-indigo-300/80">Total Sentences</div>
                     </div>
-                    <div className="bg-gradient-to-br from-emerald-800/40 to-teal-900/40 rounded-xl p-6 border border-emerald-600/30 hover:scale-105 transition-all duration-300 shadow-lg">
+                    <div className="bg-gradient-to-br from-emerald-800/40 to-teal-950/40 rounded-xl p-6 border border-emerald-600/30 hover:scale-105 transition-all duration-300 shadow-lg">
                       <div className="text-4xl font-bold text-emerald-200">
                         {((stats?.average_confidence || 0) * 100).toFixed(1)}%
                       </div>
@@ -1168,19 +1168,19 @@ export default function MetaphorClassifier() {
                         />
                       </div>
                       <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-violet-300">
-                        <div className="bg-violet-900/20 p-2 rounded">
+                        <div className="bg-violet-950/20 p-2 rounded">
                           <strong>Literalness:</strong> {metaphorDimensions.literalness.toFixed(1)}/10
                           <div className="text-violet-400 text-xs">0=metaphorical → 10=literal</div>
                         </div>
-                        <div className="bg-violet-900/20 p-2 rounded">
+                        <div className="bg-violet-950/20 p-2 rounded">
                           <strong>Figurative Strength:</strong> {metaphorDimensions.figurativeStrength.toFixed(1)}/10
                           <div className="text-violet-400 text-xs">0=no figures → 10=strong metaphors</div>
                         </div>
-                        <div className="bg-violet-900/20 p-2 rounded">
+                        <div className="bg-violet-950/20 p-2 rounded">
                           <strong>Concreteness:</strong> {metaphorDimensions.concreteness.toFixed(1)}/10
                           <div className="text-violet-400 text-xs">0=abstract → 10=tangible imagery</div>
                         </div>
-                        <div className="bg-violet-900/20 p-2 rounded">
+                        <div className="bg-violet-950/20 p-2 rounded">
                           <strong>Emotional Intensity:</strong> {metaphorDimensions.emotionalIntensity.toFixed(1)}/10
                           <div className="text-violet-400 text-xs">0=neutral → 10=highly emotional</div>
                         </div>
@@ -1289,7 +1289,7 @@ export default function MetaphorClassifier() {
                             </tr>
                           </tbody>
                         </table>
-                        <div className="p-4 text-xs text-violet-300/70 bg-violet-900/10 border-t border-violet-600/20">
+                        <div className="p-4 text-xs text-violet-300/70 bg-violet-950/10 border-t border-violet-600/20">
                           <p><strong>Note:</strong> These dimensions provide deeper insight into the linguistic characteristics of your text beyond simple metaphor/literal classification.</p>
                         </div>
                       </div>
@@ -1328,7 +1328,7 @@ export default function MetaphorClassifier() {
             )}
           </div>
           <div className="lg:col-span-1 space-y-8">
-            <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20 sticky top-6">
+            <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20 sticky top-6">
               <h2 className="text-xl font-bold mb-6 text-violet-100 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
                   <svg
@@ -1367,7 +1367,7 @@ export default function MetaphorClassifier() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
+            <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
               <h2 className="text-xl font-bold mb-6 text-violet-100 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
                   <svg
@@ -1406,7 +1406,7 @@ export default function MetaphorClassifier() {
               )}
             </div>
 
-            <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
+            <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
               <h2 className="text-xl font-bold mb-6 text-violet-100 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
                   <svg
@@ -1439,7 +1439,7 @@ export default function MetaphorClassifier() {
                               {historyItem.query.length > 30 ? `${historyItem.query.slice(0, 30)}...` : historyItem.query}
                             </span>
                             <button
-                              className="text-red-400 hover:text-red-300 transition text-sm p-1 rounded hover:bg-red-900/20"
+                              className="text-red-400 hover:text-red-300 transition text-sm p-1 rounded hover:bg-red-950/20"
                               onClick={() => deleteHistoryItem(historyItem.id)}
                               title="Delete this search"
                             >
@@ -1485,7 +1485,7 @@ export default function MetaphorClassifier() {
             </div>
 
             {/* Enhanced search analytics with violet-to-purple theme */}
-            <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
+            <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
               <h2 className="text-xl font-bold mb-6 text-violet-100 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
                   <svg
@@ -1521,7 +1521,7 @@ export default function MetaphorClassifier() {
             </div>
 
             {/* Enhanced tips section with violet-to-purple theme */}
-            <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
+            <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
               <h2 className="text-xl font-bold mb-6 text-violet-100 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
                   <svg
@@ -1557,7 +1557,7 @@ export default function MetaphorClassifier() {
             </div>
 
             {/* Enhanced feedback section with violet-to-purple theme */}
-            <div className="bg-gradient-to-br from-slate-800/70 via-violet-900/30 to-purple-900/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
+            <div className="bg-gradient-to-br from-slate-800/70 via-violet-950/30 to-purple-950/50 backdrop-blur-xl border border-violet-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-violet-500/20">
               <h2 className="text-xl font-bold mb-6 text-violet-100 flex items-center">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mr-3 shadow-lg">
                   <svg
@@ -1587,7 +1587,7 @@ export default function MetaphorClassifier() {
           </div>
         </div>
 
-        <footer className="mt-12 py-8 text-center text-violet-200/70 text-sm border-t border-violet-700/30 bg-slate-900/30 backdrop-blur-sm">
+        <footer className="mt-12 py-8 text-center text-violet-200/70 text-sm border-t border-violet-700/30 bg-slate-950/30 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto px-6">
             {/* <div className="flex flex-col md:flex-row items-center justify-center mb-6 space-y-4 md:space-y-0 md:space-x-8">
       {examples.map((example, index) => (

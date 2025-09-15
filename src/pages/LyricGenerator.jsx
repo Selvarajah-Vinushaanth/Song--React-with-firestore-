@@ -44,9 +44,9 @@ export default function LyricGenerator() {
   // Remove local moodUsage state - we'll calculate from Firestore data
 
   const motions = [
-    { value: "அமைதி", label: "Calm / அமைதி", color: "bg-blue-600", icon: "🌊" },
+    { value: "அமைதி", label: "Calm / அமைதி", color: "bg-blue-900", icon: "🌊" },
     { value: "சந்தோஷம்", label: "Happy / சந்தோஷம்", color: "bg-yellow-500", icon: "😊" },
-    { value: "கவலை", label: "Sad / கவலை", color: "bg-purple-600", icon: "😢" },
+    { value: "கவலை", label: "Sad / கவலை", color: "bg-purple-900", icon: "😢" },
     { value: "காதல்", label: "Romantic / காதல்", color: "bg-pink-500", icon: "💖" },
     { value: "உற்சாகம்", label: "Energetic / உற்சாகம்", color: "bg-red-500", icon: "⚡" },
   ]
@@ -383,17 +383,17 @@ export default function LyricGenerator() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-gray-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-900 text-gray-100 relative overflow-hidden">
       {/* Grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#3b82f612_1px,transparent_1px),linear-gradient(to_bottom,#3b82f612_1px,transparent_1px)] bg-[size:24px_24px]"></div>
       {/* Decorative gradient circles (blue/indigo theme) */}
-      <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full blur-3xl animate-pulse opacity-70"></div>
+      <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-900/20 to-indigo-900/20 rounded-full blur-3xl animate-pulse opacity-70"></div>
       <div className="absolute bottom-40 right-20 w-80 h-80 bg-gradient-to-r from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "2s" }}></div>
-      <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-indigo-600/20 to-blue-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
+      <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-indigo-900/20 to-blue-900/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
 
       <ToastContainer />
       {/* Header with enhanced gradient and glass effect */}
-      <header className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 shadow-2xl backdrop-blur-sm border-b border-white/10">
+      <header className="relative bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-6 shadow-2xl backdrop-blur-sm border-b border-white/10">
         <div className="max-w-full mx-auto px-6">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight flex items-center">
@@ -461,7 +461,7 @@ export default function LyricGenerator() {
             </div>
           )}
 
-          <div className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 space-y-8 backdrop-blur-xl">
+          <div className="bg-black/5 border border-black/10 rounded-2xl shadow-2xl p-8 space-y-8 backdrop-blur-xl">
           
             <h2 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
@@ -508,8 +508,8 @@ export default function LyricGenerator() {
                     key={option.value}
                     className={`group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 transform hover:scale-105 ${
                       motion === option.value
-                        ? "ring-2 ring-blue-400 shadow-lg shadow-blue-500/30 bg-gradient-to-br from-blue-600 to-indigo-600"
-                        : "bg-white/10 hover:bg-white/20 border border-white/20"
+                        ? "ring-2 ring-blue-400 shadow-lg shadow-blue-500/30 bg-gradient-to-br from-blue-900 to-indigo-900"
+                        : "bg-black/10 hover:bg-white/20 border border-white/20"
                     }`}
                     onClick={() => setMotion(option.value)}
                   >
@@ -544,7 +544,7 @@ export default function LyricGenerator() {
                 Initial Sentence (Optional)
               </label>
               <textarea
-                className="w-full border border-white/20 bg-white/5 text-white rounded-2xl p-6 h-40 font-tamil focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none shadow-inner backdrop-blur-sm placeholder-gray-400"
+                className="w-full border border-white/20 bg-black/5 text-white rounded-2xl p-6 h-40 font-tamil focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none shadow-inner backdrop-blur-sm placeholder-gray-400"
                 placeholder="Enter an initial sentence to inspire your lyrics..."
                 value={seed}
                 onChange={(e) => setSeed(e.target.value)}
@@ -571,15 +571,15 @@ export default function LyricGenerator() {
                 Number of Lyrics
               </label>
               <select
-                className="w-full border border-white/20 bg-white/5 text-white rounded-2xl p-4 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner backdrop-blur-sm"
+                className="w-full border border-white/20 bg-black/5 text-white rounded-2xl p-4 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-inner backdrop-blur-sm"
                 value={count}
                 onChange={(e) => setCount(parseInt(e.target.value))}
               >
-                <option value={1} className="bg-gray-800 text-white">1 Lyric</option>
-                <option value={2} className="bg-gray-800 text-white">2 Lyrics</option>
-                <option value={3} className="bg-gray-800 text-white">3 Lyrics</option>
-                <option value={4} className="bg-gray-800 text-white">4 Lyrics</option>
-                <option value={5} className="bg-gray-800 text-white">5 Lyrics</option>
+                <option value={1} className="bg-gray-900 text-white">1 Lyric</option>
+                <option value={2} className="bg-gray-900 text-white">2 Lyrics</option>
+                <option value={3} className="bg-gray-900 text-white">3 Lyrics</option>
+                <option value={4} className="bg-gray-900 text-white">4 Lyrics</option>
+                <option value={5} className="bg-gray-900 text-white">5 Lyrics</option>
               </select>
             </div>
 
@@ -587,10 +587,10 @@ export default function LyricGenerator() {
             <button
               className={`w-full ${
                 isLoading
-                  ? "bg-gray-600/50 cursor-not-allowed"
+                  ? "bg-gray-900/50 cursor-not-allowed"
                   : tokens >= count
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02]"
-                  : "bg-gradient-to-r from-red-600 to-red-700 cursor-not-allowed opacity-75"
+                  ? "bg-gradient-to-r from-blue-900 to-indigo-900 hover:from-blue-700 hover:to-indigo-700 hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-[1.02]"
+                  : "bg-gradient-to-r from-red-900 to-red-700 cursor-not-allowed opacity-75"
               } text-white px-8 py-6 rounded-2xl transition-all duration-300 shadow-xl flex items-center justify-center space-x-3 font-semibold text-lg backdrop-blur-sm`}
               onClick={handleGenerateLyrics}
               disabled={isLoading || tokens < count}
@@ -659,7 +659,7 @@ export default function LyricGenerator() {
           </div>
 
           {/* Enhanced Output Section */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 backdrop-blur-xl mt-8">
+          <div className="bg-black/5 border border-black/10 rounded-2xl shadow-2xl p-8 backdrop-blur-xl mt-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0 md:space-x-8">
               <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
@@ -684,12 +684,12 @@ export default function LyricGenerator() {
               {generatedLyrics && (
                 <div className="flex flex-wrap gap-3">
                   {/* Enhanced View Mode Toggles */}
-                  <div className="flex bg-white/10 rounded-xl p-1 backdrop-blur-sm border border-white/20">
+                  <div className="flex bg-black/10 rounded-xl p-1 backdrop-blur-sm border border-white/20">
                     <button
                       onClick={() => handleViewModeChange("cards")}
                       className={`py-2 px-4 rounded-lg transition-all duration-300 ${
                         viewMode === "cards"
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                          ? "bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg"
                           : "text-gray-300 hover:text-white hover:bg-white/10"
                       }`}
                     >
@@ -706,7 +706,7 @@ export default function LyricGenerator() {
                       onClick={() => handleViewModeChange("list")}
                       className={`py-2 px-4 rounded-lg transition-all duration-300 ${
                         viewMode === "list"
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                          ? "bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg"
                           : "text-gray-300 hover:text-white hover:bg-white/10"
                       }`}
                     >
@@ -727,7 +727,7 @@ export default function LyricGenerator() {
                       onClick={() => handleViewModeChange("focus")}
                       className={`py-2 px-4 rounded-lg transition-all duration-300 ${
                         viewMode === "focus"
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                          ? "bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-lg"
                           : "text-gray-300 hover:text-white hover:bg-white/10"
                       }`}
                     >
@@ -807,8 +807,8 @@ export default function LyricGenerator() {
                         key={index}
                         className={`group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 cursor-pointer transform hover:scale-105 ${
                           index === selectedLyric
-                            ? "bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border-2 border-blue-400 shadow-2xl shadow-blue-500/30"
-                            : "bg-white/5 border border-white/20 hover:border-blue-400/50 hover:bg-white/10"
+                            ? "bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border-2 border-blue-400 shadow-2xl shadow-blue-500/30"
+                            : "bg-black/5 border border-white/20 hover:border-blue-400/50 hover:bg-white/10"
                         }`}
                         onClick={() => setSelectedLyric(index)}
                       >
@@ -855,8 +855,8 @@ export default function LyricGenerator() {
                         key={index}
                         className={`group p-5 rounded-xl flex items-start space-x-4 transition-all duration-300 cursor-pointer ${
                           index === selectedLyric
-                            ? "bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-400/50 shadow-lg"
-                            : "bg-white/5 border border-white/10 hover:border-blue-400/30 hover:bg-white/10"
+                            ? "bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border border-blue-400/50 shadow-lg"
+                            : "bg-black/5 border border-white/10 hover:border-blue-400/30 hover:bg-white/10"
                         }`}
                         onClick={() => setSelectedLyric(index)}
                       >
@@ -890,13 +890,13 @@ export default function LyricGenerator() {
 
                 {/* Enhanced Focus View */}
                 {viewMode === "focus" && parsedLyrics.length > 0 && (
-                  <div className="bg-white/5 rounded-2xl border border-white/20 overflow-hidden backdrop-blur-sm shadow-2xl">
-                    <div className="flex justify-between items-center bg-gradient-to-r from-blue-600/20 to-indigo-600/20 px-6 py-4 border-b border-white/20">
+                  <div className="bg-black/5 rounded-2xl border border-white/20 overflow-hidden backdrop-blur-sm shadow-2xl">
+                    <div className="flex justify-between items-center bg-gradient-to-r from-blue-900/20 to-indigo-900/20 px-6 py-4 border-b border-white/20">
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={() => setSelectedLyric((prev) => Math.max(0, prev - 1))}
                           disabled={selectedLyric === 0}
-                          className={`p-2 rounded-full transition-all duration-300 ${selectedLyric === 0 ? "text-gray-600 cursor-not-allowed" : "text-gray-300 hover:text-white hover:bg-white/20"}`}
+                          className={`p-2 rounded-full transition-all duration-300 ${selectedLyric === 0 ? "text-gray-900 cursor-not-allowed" : "text-gray-300 hover:text-white hover:bg-white/20"}`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -917,7 +917,7 @@ export default function LyricGenerator() {
                         <button
                           onClick={() => setSelectedLyric((prev) => Math.min(parsedLyrics.length - 1, prev + 1))}
                           disabled={selectedLyric === parsedLyrics.length - 1}
-                          className={`p-2 rounded-full transition-all duration-300 ${selectedLyric === parsedLyrics.length - 1 ? "text-gray-600 cursor-not-allowed" : "text-gray-300 hover:text-white hover:bg-white/20"}`}
+                          className={`p-2 rounded-full transition-all duration-300 ${selectedLyric === parsedLyrics.length - 1 ? "text-gray-900 cursor-not-allowed" : "text-gray-300 hover:text-white hover:bg-white/20"}`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -963,7 +963,7 @@ export default function LyricGenerator() {
                       <div className="absolute bottom-8 right-8 text-6xl text-blue-300/30 font-serif">"</div>
                     </div>
 
-                    <div className="px-6 py-4 border-t border-white/20 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 flex justify-center space-x-2">
+                    <div className="px-6 py-4 border-t border-white/20 bg-gradient-to-r from-blue-900/10 to-indigo-900/10 flex justify-center space-x-2">
                       {parsedLyrics.map((_, index) => (
                         <button
                           key={index}
@@ -1013,7 +1013,7 @@ export default function LyricGenerator() {
           <div className="flex justify-center mt-8">
             <button
               onClick={() => setShowAnalytics(!showAnalytics)}
-              className="flex items-center space-x-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm"
+              className="flex items-center space-x-3 bg-gradient-to-r from-blue-900 to-indigo-900 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 backdrop-blur-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1035,7 +1035,7 @@ export default function LyricGenerator() {
 
           {/* Enhanced Mood Distribution Chart */}
           {showAnalytics && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-8 backdrop-blur-xl mt-6">
+            <div className="bg-black/5 border border-black/10 rounded-2xl shadow-2xl p-8 backdrop-blur-xl mt-6">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 flex items-center">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
@@ -1073,7 +1073,7 @@ export default function LyricGenerator() {
               </div>
 
               <div className="flex justify-center">
-                <div className="bg-white/5 rounded-2xl p-8 w-full max-w-2xl border border-white/20 backdrop-blur-sm">
+                <div className="bg-black/5 rounded-2xl p-8 w-full max-w-2xl border border-black/20 backdrop-blur-sm">
                   <h3 className="text-lg font-semibold mb-6 text-center text-blue-200">Your Generation Preferences</h3>
                   <ResponsiveContainer width="100%" height={350}>
                     <PieChart>
@@ -1116,14 +1116,14 @@ export default function LyricGenerator() {
 
                   {/* Enhanced Quick Stats */}
                   <div className="grid grid-cols-3 gap-6 mt-8">
-                    <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-xl p-4 text-center border border-blue-500/30 backdrop-blur-sm">
+                    <div className="bg-gradient-to-br from-blue-900/20 to-blue-900/20 rounded-xl p-4 text-center border border-blue-500/30 backdrop-blur-sm">
                       <div className="text-2xl font-bold text-blue-300 mb-1">
                         {Object.values(calculateMoodUsage()).reduce((a, b) => a + b, 0)}
                       </div>
                       <div className="text-xs text-gray-300 uppercase tracking-wide">Total Generations</div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-indigo-600/20 to-purple-800/20 rounded-xl p-4 text-center border border-indigo-500/30 backdrop-blur-sm">
+                    <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 rounded-xl p-4 text-center border border-indigo-500/30 backdrop-blur-sm">
                       <div className="text-2xl font-bold text-indigo-300 mb-1">
                         {
                           Object.entries(calculateMoodUsage()).reduce(
@@ -1135,7 +1135,7 @@ export default function LyricGenerator() {
                       <div className="text-xs text-gray-300 uppercase tracking-wide">Favorite Mood</div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-600/20 to-pink-800/20 rounded-xl p-4 text-center border border-purple-500/30 backdrop-blur-sm">
+                    <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-xl p-4 text-center border border-purple-500/30 backdrop-blur-sm">
                       <div className="text-2xl font-bold text-purple-300 mb-1">{parsedLyrics.length}</div>
                       <div className="text-xs text-gray-300 uppercase tracking-wide">Current Lyrics</div>
                     </div>
@@ -1147,8 +1147,8 @@ export default function LyricGenerator() {
         </div>
 
         {/* Enhanced Right Sidebar for Examples and History */}
-        <aside className="w-1/4 px-6 bg-white/5 border-l border-white/10 rounded-l-2xl shadow-2xl overflow-y-auto backdrop-blur-xl">
-          <div className="sticky top-0 bg-white/5 backdrop-blur-xl border-b border-white/10 pb-4 mb-6">
+        <aside className="w-1/4 px-6 bg-black/5 border-l border-black/10 rounded-l-2xl shadow-2xl overflow-y-auto backdrop-blur-xl">
+          <div className="sticky top-0 bg-black/5 backdrop-blur-xl border-b border-black/10 pb-4 mb-6">
             <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 text-center flex items-center justify-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1169,7 +1169,7 @@ export default function LyricGenerator() {
           </div>
 
           {/* Generation History Section */}
-          <div className="mb-8 bg-white/5 border border-white/10 rounded-2xl shadow-2xl p-6 backdrop-blur-xl">
+          <div className="mb-8 bg-black/5 border border-white/10 rounded-2xl shadow-2xl p-6 backdrop-blur-xl">
             <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300 mb-4 flex items-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1193,7 +1193,7 @@ export default function LyricGenerator() {
                     {searchHistory.map((historyItem, index) => (
                       <div
                         key={historyItem.id}
-                        className="bg-white/5 rounded-xl p-4 border border-white/10 hover:border-blue-400/50 transition-all duration-300 cursor-pointer hover:bg-white/10"
+                        className="bg-black/5 rounded-xl p-4 border border-white/10 hover:border-blue-400/50 transition-all duration-300 cursor-pointer hover:bg-white/10"
                         onClick={() => loadFromHistory(historyItem)}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -1226,7 +1226,7 @@ export default function LyricGenerator() {
                     ))}
                   </div>
                   <button
-                    className="mt-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white px-4 py-2 rounded-lg text-sm transition-all duration-300 w-full shadow-lg"
+                    className="mt-4 bg-gradient-to-r from-red-900 to-red-700 hover:from-red-500 hover:to-red-900 text-white px-4 py-2 rounded-lg text-sm transition-all duration-300 w-full shadow-lg"
                     onClick={() => {
                       Swal.fire({
                         title: "Are you sure?",
@@ -1259,7 +1259,7 @@ export default function LyricGenerator() {
             {lyricExamples.map((example, idx) => (
               <div
                 key={idx}
-                className="group bg-white/5 rounded-xl p-5 border border-white/20 cursor-pointer hover:border-blue-400/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:bg-white/10 transform hover:scale-105"
+                className="group bg-black/5 rounded-xl p-5 border border-white/20 cursor-pointer hover:border-blue-400/50 transition-all duration-300 shadow-lg hover:shadow-xl hover:bg-white/10 transform hover:scale-105"
                 onClick={() => handleExampleClick(example)}
               >
                 <div className="flex items-center mb-3">
@@ -1279,7 +1279,7 @@ export default function LyricGenerator() {
             ))}
           </div>
 
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl text-center border border-blue-500/20">
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/10 to-indigo-900/10 rounded-xl text-center border border-blue-500/20">
             <p className="text-xs text-blue-300 font-medium">💡 Click any example to use it as your starting point!</p>
           </div>
         </aside>
@@ -1292,7 +1292,7 @@ export default function LyricGenerator() {
             {motions.map((motion) => (
               <div key={motion.value} className="flex items-center space-x-2 group">
                 <div
-                  className={`w-4 h-4 rounded-full bg-gradient-to-r ${motion.color.replace("bg-", "from-")} to-indigo-600 group-hover:scale-110 transition-transform duration-300`}
+                  className={`w-4 h-4 rounded-full bg-gradient-to-r ${motion.color.replace("bg-", "from-")} to-indigo-900 group-hover:scale-110 transition-transform duration-300`}
                 ></div>
                 <span className="text-xs text-gray-300 group-hover:text-white transition-colors duration-300">
                   {motion.label}
@@ -1341,7 +1341,7 @@ export default function LyricGenerator() {
             ].map((social, index) => (
               <button
                 key={index}
-                className="w-10 h-10 bg-white/10 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 group border border-white/20"
+                className="w-10 h-10 bg-white/10 hover:bg-gradient-to-r hover:from-blue-900 hover:to-indigo-900 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 group border border-white/20"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

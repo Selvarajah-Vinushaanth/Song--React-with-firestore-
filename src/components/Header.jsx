@@ -95,9 +95,7 @@ useEffect(() => {
   }
 
   return (
-    <header  className={`relative bg-gradient-to-r from-gray-950 via-gray-900 to-gray-800 border-b border-white/10 shadow-xl backdrop-blur-xl transition-transform duration-300 ${
-    showHeader ? 'translate-y-0' : '-translate-y-full'
-  }`}>
+    <header  className="bg-gradient-to-r from-gray-950 via-gray-900 to-gray-800 border-b border-white/10 shadow-xl backdrop-blur-xl transition-transform duration-300 ">
       {/* Decorative accents */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:20px_20px] opacity-[0.08]"></div>
@@ -120,7 +118,7 @@ useEffect(() => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex items-center space-x-4 sm:space-x-6">
+          <nav className="flex items-center space-x-8 sm:space-x-10">
             {/* <Link 
               to="/" 
               className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
@@ -148,13 +146,13 @@ useEffect(() => {
                 {/* API Keys */}
                 <Link
                   to="/api-keys"
-                  className={`relative px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 border ${
+                  className={`w-40 flex justify-center px-4 py-3 rounded-xl text-base font-medium gap-2 ${
                     isActive('/api-keys')
                       ? 'bg-white/10 text-white border-white/10 shadow-inner'
                       : 'text-gray-300 hover:text-white hover:bg-white/5 border-transparent'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v-1l1-1 1-1-2.257-2.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
                     </svg>
@@ -350,7 +348,13 @@ useEffect(() => {
                 {/* Sign out */}
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-300 text-red-300 hover:text-white bg-gradient-to-r from-red-700/15 to-red-900/15 hover:from-red-600/30 hover:to-red-800/30 border border-red-700/30 hover:border-red-600/50 shadow-sm hover:shadow-red-500/10"
+                  className="flex items-center gap-2 px-4 py-3 w-42 
+             rounded-xl text-sm sm:text-base font-medium 
+             transition-all duration-300 text-red-300 hover:text-white 
+             bg-gradient-to-r from-red-700/15 to-red-900/15 
+             hover:from-red-600/30 hover:to-red-800/30 
+             border border-red-700/30 hover:border-red-600/50 
+             shadow-sm hover:shadow-red-500/10 text-center whitespace-nowrap"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />

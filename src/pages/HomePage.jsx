@@ -31,7 +31,7 @@ export default function HomePage() {
       title: "Metaphor Classifier",
       description: "Analyze Tamil text to identify metaphorical expressions with advanced AI algorithms",
       icon: "🎭",
-      color: "from-violet-600 to-purple-600",
+      color: "from-violet-950 to-purple-950",
       route: "/metaphor-classifier",
       features: ["Detect metaphors in text", "Confidence scores", "Visual analysis"],
     },
@@ -40,7 +40,7 @@ export default function HomePage() {
       title: "Lyric Generator",
       description: "Generate beautiful Tamil lyrics based on themes and emotions with creative AI",
       icon: "🎵",
-      color: "from-blue-600 to-indigo-600",
+      color: "from-blue-900 to-indigo-900",
       route: "/lyric-generator",
       features: ["Theme-based generation", "Continue lyrics", "Multiple variations"],
     },
@@ -49,7 +49,7 @@ export default function HomePage() {
       title: "Metaphor Creator",
       description: "Create custom metaphors by combining source and target concepts intelligently",
       icon: "✨",
-      color: "from-pink-500 to-rose-600",
+      color: "from-pink-800 to-rose-900",
       route: "/metaphor-creator",
       features: ["Custom creation", "Source & target mapping", "Multiple styles"],
     },
@@ -58,7 +58,7 @@ export default function HomePage() {
       title: "Masking Predict",
       description: "Suggest words for masked positions in Tamil sentences (e.g., 'I [mask] to school')",
       icon: "🕵️‍♂️",
-      color: "from-green-500 to-lime-500",
+      color: "from-gray-900 via-slate-900 to-black",
       route: "/masking-predict",
       features: ["Fill in the blank", "Multiple suggestions", "Context-aware"],
     },
@@ -200,7 +200,11 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
+{currentUser && (
+          <div className="mb-12">
+            <SubscriptionNav variant="card" className="max-w-md mx-auto" />
+          </div>
+        )}
         <div className="text-center mb-20">
           <div className="inline-block">
             <h2 className="text-5xl lg:text-6xl font-bold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-300">
@@ -215,11 +219,7 @@ export default function HomePage() {
         </div>
 
         {/* Subscription Navigation */}
-        {currentUser && (
-          <div className="mb-12">
-            <SubscriptionNav variant="card" className="max-w-md mx-auto" />
-          </div>
-        )}
+        
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 ">
           {cards.map((card, index) => (

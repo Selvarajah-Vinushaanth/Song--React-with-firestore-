@@ -66,18 +66,18 @@ function App() {
                   } 
                 />
                 <Route 
-                  path="/admin" 
-                  element={
-                    <PrivateRoute>
-                      <AdminDashboard />
-                    </PrivateRoute>
-                  } 
-                />
-                <Route 
                   path="/metaphor-creator" 
                   element={
                     <PrivateRoute>
                       <MetaphorCreator />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <PrivateRoute>
+                      <AdminDashboard />
                     </PrivateRoute>
                   } 
                 />

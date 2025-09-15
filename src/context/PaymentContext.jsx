@@ -325,10 +325,10 @@ export function PaymentProvider({ children }) {
     if (!currentUser) return;
 
     try {
+      // Simplified query - just filter by userId, then sort in memory
       const paymentsQuery = query(
         collection(db, 'payments'),
-        where('userId', '==', currentUser.uid),
-        orderBy('timestamp', 'desc')
+        where('userId', '==', currentUser.uid)
       );
       
       const snapshot = await getDocs(paymentsQuery);
@@ -337,9 +337,16 @@ export function PaymentProvider({ children }) {
         ...doc.data()
       }));
       
+      // Sort by timestamp in memory to avoid index requirement
+      payments.sort((a, b) => {
+        if (!a.timestamp || !b.timestamp) return 0;
+        return b.timestamp.toDate() - a.timestamp.toDate();
+      });
+      
       setPaymentHistory(payments);
     } catch (error) {
       console.error('Error fetching payment history:', error);
+      setPaymentHistory([]); // Set empty array on error
     }
   };
 
