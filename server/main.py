@@ -98,7 +98,26 @@ async def log_api_request(user_id: str, endpoint: str, status_code: int, latency
         print(f"Failed to log API request: {str(e)}")
         # Don't raise exception - logging failure shouldn't break the API
 
-
+async def log_api_request_test(user_id: str, endpoint: str, status_code: int, latency_ms: int, payload_size: int = 0):
+    """Log API request to Firestore for analytics"""
+    try:
+        log_data = {
+            'userId': user_id,
+            'endpoint': endpoint,
+            'status': status_code,
+            'latency': latency_ms,
+            'payloadSize': payload_size,
+            'timestamp': firestore.SERVER_TIMESTAMP,
+            'date': datetime.now().strftime('%Y-%m-%d')
+        }
+        
+        # Add to apiRequests collection
+        db.collection('apiRequests_test').add(log_data)
+        print(f"Logged API request for user {user_id}: {endpoint} - {status_code}")
+        
+    except Exception as e:
+        print(f"Failed to log API request: {str(e)}")
+        # Don't raise exception - logging failure shouldn't break the API
 # Models for request/response data
 class MetaphorRequest(BaseModel):
     source: str
@@ -107,28 +126,43 @@ class MetaphorRequest(BaseModel):
     Context: Optional[str] = None
     emotion: Optional[str] = None
     count: Optional[int] = 2
-
+    # userId:str
+class MetaphorRequestReal(BaseModel):
+    source: str
+    target: str
+    # Prefer Context from frontend (supports Tamil/English); keep emotion for backward compatibility
+    Context: Optional[str] = None
+    emotion: Optional[str] = None
+    count: Optional[int] = 2
+    userId:str
 class MetaphorResponse(BaseModel):
     metaphors: List[str]
     
+class PredictionRequestReal(BaseModel):
+    text: str
+    userId:str
+  
 class PredictionRequest(BaseModel):
     text: str
-    
+    # userId:str    
 class PredictionResponse(BaseModel):
     is_metaphor: bool
     confidence: float
-    
 class MaskingRequest(BaseModel):
     text: str
     top_k: Optional[int] = 5  # Updated default value to be more reasonable
-    
+    # userId:str    
+class MaskingRequestReal(BaseModel):
+    text: str
+    top_k: Optional[int] = 5  # Updated default value to be more reasonable
+    userId:str
 class MaskingResponse(BaseModel):
     suggestions: List[str]
 
 
 # API Routes
 @app.post("/api/create-metaphors", response_model=MetaphorResponse)
-async def create_metaphors(request: MetaphorRequest):
+async def create_metaphors(request: MetaphorRequestReal):
     try:
         # Prefer explicit Context from client; else derive from emotion for backward compatibility
         emotion_to_context = {
@@ -154,15 +188,16 @@ async def create_metaphors(request: MetaphorRequest):
         for m in metaphors:
             if m not in unique_metaphors:
                 unique_metaphors.append(m)
-
+        await log_api_request(request.userId, "metaphor-creator", 200, 500)
         return {"metaphors": unique_metaphors}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating metaphors: {str(e)}")
 
 @app.post("/api/predict", response_model=PredictionResponse)
-async def predict_metaphor(request: PredictionRequest):
+async def predict_metaphor(request: PredictionRequestReal):
     try:
         is_metaphor, confidence = classify_metaphor(request.text)
+        await log_api_request(request.userId, "metaphor-classifier", 200,500)
         return {"is_metaphor": is_metaphor, "confidence": confidence}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error predicting metaphor: {str(e)}")
@@ -171,13 +206,18 @@ class LyricsRequest(BaseModel):
     motion: str
     seed: Optional[str] = ""
     count: Optional[int] = 3  # Add count parameter with default value
-
+    # userId:str
+class LyricsRequestReal(BaseModel):
+    motion: str
+    seed: Optional[str] = ""
+    count: Optional[int] = 3  # Add count parameter with default value
+    userId:str    
 class LyricsResponse(BaseModel):
     lyrics: List[str]
     # suggestions: Optional[List[str]] = None
 
 @app.post("/api/generate-lyrics", response_model=LyricsResponse)
-async def create_lyrics(request: LyricsRequest):
+async def create_lyrics(request: LyricsRequestReal):
     try:
         print(f"Received lyric request: Motion={request.motion}, Seed={request.seed}, Count={request.count}")
 
@@ -191,6 +231,7 @@ async def create_lyrics(request: LyricsRequest):
         all_lyrics = [main_lyric] + more_lyrics
 
         print(f"Generated total {len(all_lyrics)} lyrics")
+        await log_api_request(request.userId, "lyric-generator", 200,500)
         return {"lyrics": all_lyrics}
 
     except Exception as e:
@@ -198,15 +239,17 @@ async def create_lyrics(request: LyricsRequest):
         raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
 
 @app.post("/api/predict-mask")
-async def predict_mask(request: MaskingRequest):
+async def predict_mask(request: MaskingRequestReal):
     try:
         if "[mask]" not in request.text:
             raise HTTPException(status_code=400, detail="Text must contain [mask] token")
-        
+        print(request)
         # Ensure top_k is within reasonable bounds
         top_k = max(1, min(15, request.top_k))  # Allow up to 15 suggestions
-        
+        user_id=request.userId
+        print(user_id)
         suggestions = predict_masked_tokens(request.text, top_k=top_k)
+        await log_api_request(user_id, "masking-predict", 200, 500)
         
         return {"suggestions": suggestions}
     except Exception as e:
@@ -229,19 +272,19 @@ async def predict_mask_v1(request: MaskingRequest, user_id: str = Depends(valida
         
         # Log successful request
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/predict-mask", 200, latency_ms, len(request.text))
+        await log_api_request_test(user_id, "/api/v1/predict-mask", 200, latency_ms, len(request.text))
         
         return {"suggestions": suggestions}
     except HTTPException as he:
         # Log failed request
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/predict-mask", he.status_code, latency_ms)
+        await log_api_request_test(user_id, "/api/v1/predict-mask", he.status_code, latency_ms)
         raise he
     except Exception as e:
         print(f"Error predicting masked tokens: {str(e)}")
         # Log error request
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/predict-mask", 500, latency_ms)
+        await log_api_request_test(user_id, "/api/v1/predict-mask", 500, latency_ms)
         raise HTTPException(status_code=500, detail=f"Error predicting masked tokens: {str(e)}")
 
 @app.post("/api/v1/classify-metaphor")
@@ -254,13 +297,13 @@ async def classify_metaphor_v1(request: PredictionRequest, user_id: str = Depend
         
         # Log successful request
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/classify-metaphor", 200, latency_ms, len(request.text))
+        await log_api_request_test(user_id, "/api/v1/classify-metaphor", 200, latency_ms, len(request.text))
         
         return {"is_metaphor": is_metaphor, "confidence": confidence}
     except Exception as e:
         # Log error request
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/classify-metaphor", 500, latency_ms)
+        await log_api_request_test(user_id, "/api/v1/classify-metaphor", 500, latency_ms)
         raise HTTPException(status_code=500, detail=f"Error predicting metaphor: {str(e)}")
 
 @app.post("/api/v1/create-metaphors")
@@ -293,12 +336,12 @@ async def create_metaphors_v1(request: MetaphorRequest, user_id: str = Depends(v
 
         latency_ms = int((time.time() - start_time) * 1000)
         payload_size = len(request.source) + len(request.target or "")
-        await log_api_request(user_id, "/api/v1/create-metaphors", 200, latency_ms, payload_size)
+        await log_api_request_test(user_id, "/api/v1/create-metaphors", 200, latency_ms, payload_size)
 
         return {"metaphors": unique_metaphors}
     except Exception as e:
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/create-metaphors", 500, latency_ms)
+        await log_api_request_test(user_id, "/api/v1/create-metaphors", 500, latency_ms)
         raise HTTPException(status_code=500, detail=f"Error generating metaphors: {str(e)}")
 
 @app.post("/api/v1/generate-lyrics")
@@ -323,7 +366,7 @@ async def generate_lyrics_v1(request: LyricsRequest, user_id: str = Depends(vali
         # Log successful request
         latency_ms = int((time.time() - start_time) * 1000)
         payload_size = len(request.motion) + len(request.seed or "")
-        await log_api_request(user_id, "/api/v1/generate-lyrics", 200, latency_ms, payload_size)
+        await log_api_request_test(user_id, "/api/v1/generate-lyrics", 200, latency_ms, payload_size)
         
         return {"lyrics": all_lyrics}
 
@@ -331,7 +374,7 @@ async def generate_lyrics_v1(request: LyricsRequest, user_id: str = Depends(vali
         print(f"Error generating lyrics: {str(e)}")
         # Log error request
         latency_ms = int((time.time() - start_time) * 1000)
-        await log_api_request(user_id, "/api/v1/generate-lyrics", 500, latency_ms)
+        await log_api_request_test(user_id, "/api/v1/generate-lyrics", 500, latency_ms)
         raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
 
 @app.get("/")

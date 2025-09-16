@@ -295,6 +295,7 @@ export default function MetaphorCreator() {
         target,
         Context,
         count, // Include count in the request
+        userId:currentUser.uid
       })
 
       // Process the response
@@ -488,7 +489,7 @@ export default function MetaphorCreator() {
       <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,rgba(236,72,153,0.015)_49%,rgba(236,72,153,0.015)_51%,transparent_52%)] bg-[length:20px_20px]"></div>
 
       <ToastContainer />
-      <header className="bg-gradient-to-r from-pink-800 to-rose-900 text-white p-6 shadow-2xl backdrop-blur-sm border-b border-pink-500/10 relative">
+      <header className="bg-gradient-to-r from-pink-800 to-rose-900 text-white p-6 shadow-2xl backdrop-blur-sm border-b border-gray-700/10 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-pink-800/95 to-rose-900/95 backdrop-blur-sm"></div>
         <div className="max-w-full mx-auto px-6 relative z-10">
           <div className="flex justify-between items-center">
@@ -519,7 +520,7 @@ export default function MetaphorCreator() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-black/30 border border-pink-500/10 rounded-2xl shadow-2xl p-8 space-y-6 backdrop-blur-lg mb-8 relative overflow-hidden"
+            className="bg-black/30 border border-gray-700 rounded-2xl shadow-2xl p-8 space-y-6 backdrop-blur-lg mb-8 relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-pink-500/3 to-rose-500/3 rounded-2xl"></div>
 
@@ -554,7 +555,7 @@ export default function MetaphorCreator() {
                   placeholder="Enter concrete concept (ex: பறவை, முத்து)"
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
-                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-pink-500/20 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-500"
+                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-gray-700 focus:ring-2 focus:ring-gray-700 focus:border-gray-700 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-500"
                 />
               </div>
               <div>
@@ -567,7 +568,7 @@ export default function MetaphorCreator() {
                   placeholder="Enter abstract concept (ex: ஆவல், மனம்)"
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
-                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-pink-500/20 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-500"
+                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-gray-700 focus:ring-2 focus:ring-gray-700 focus:border-gray-700 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-500"
                 />
               </div>
             </div>
@@ -583,7 +584,7 @@ export default function MetaphorCreator() {
                   placeholder="Enter context (ex: இனிமை)"
                   value={Context}
                   onChange={(e) => setContext(e.target.value)}
-                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-pink-500/20 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-500"
+                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-gray-700 focus:ring-2 focus:ring-gray-700 focus:border-gray-700 outline-none transition-all duration-300 backdrop-blur-sm text-white placeholder-gray-500"
                 />
               </div>
 
@@ -592,7 +593,7 @@ export default function MetaphorCreator() {
                 <select
                   value={count}
                   onChange={(e) => setCount(parseInt(e.target.value))}
-                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-pink-500/20 text-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 outline-none transition-all duration-300 backdrop-blur-sm text-white"
+                  className="w-full p-4 rounded-xl bg-slate-900/70 border border-gray-700 text-sm focus:ring-2 focus:ring-gray-700 focus:border-gray-700 outline-none transition-all duration-300 backdrop-blur-sm text-white"
                 >
                   <option value={1}>1 Metaphor</option>
                   <option value={2}>2 Metaphors</option>
@@ -671,7 +672,7 @@ export default function MetaphorCreator() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-black/30 border border-pink-500/10 rounded-2xl shadow-2xl p-8 backdrop-blur-lg relative overflow-hidden"
+              className="bg-black/30 border border-gray-700 rounded-2xl shadow-2xl p-8 backdrop-blur-lg relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-rose-500/3 to-pink-500/3 rounded-2xl"></div>
 
@@ -697,7 +698,7 @@ export default function MetaphorCreator() {
                 </h2>
                 <button
                   onClick={copyToClipboard}
-                  className="px-6 py-3 bg-slate-900/70 hover:bg-slate-800/70 rounded-xl text-sm text-pink-200 transition-all duration-300 flex items-center gap-2 border border-pink-500/20 backdrop-blur-sm hover:scale-105"
+                  className="px-6 py-3 bg-slate-900/70 hover:bg-slate-800/70 rounded-xl text-sm text-pink-200 transition-all duration-300 flex items-center gap-2 border border-gray-700/20 backdrop-blur-sm hover:scale-105"
                 >
                   {copied ? (
                     <>
@@ -739,32 +740,32 @@ export default function MetaphorCreator() {
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => exportMetaphors("txt")}
-                    className="px-3 py-2 bg-pink-600/10 hover:bg-pink-600/20 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-pink-500/20"
+                    className="px-3 py-2 bg-pink-600/10 hover:bg-pink-600/20 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-gray-700/20"
                   >
                     Export TXT
                   </button>
                   <button
                     onClick={() => exportMetaphors("csv")}
-                    className="px-3 py-2 bg-pink-600/10 hover:bg-pink-600/20 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-pink-500/20"
+                    className="px-3 py-2 bg-pink-600/10 hover:bg-pink-600/20 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-gray-700/20"
                   >
                     Export CSV
                   </button>
                   <button
                     onClick={() => exportMetaphors("json")}
-                    className="px-3 py-2 bg-pink-600/10 hover:bg-pink-600/20 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-pink-500/20"
+                    className="px-3 py-2 bg-pink-600/10 hover:bg-pink-600/20 rounded-lg text-xs hover:scale-105 transition-all duration-200 border border-gray-700/20"
                   >
                     Export JSON
                   </button>
                 </div>
               </div>
-              <div className="bg-slate-950/60 rounded-xl p-6 space-y-4 backdrop-blur-sm border border-pink-500/5 relative z-10">
+              <div className="bg-slate-950/60 rounded-xl p-6 space-y-4 backdrop-blur-sm border border-gray-700 relative z-10">
                 {generatedMetaphors.map((m, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex justify-between items-center p-4 rounded-xl hover:bg-pink-500/5 transition-all duration-300 border border-transparent hover:border-pink-500/10 group"
+                    className="flex justify-between items-center p-4 rounded-xl hover:bg-pink-500/5 transition-all duration-300 border border-transparent hover:border-gray-700/10 group"
                   >
                     <p className="text-gray-100 font-medium text-lg">{m}</p>
                     <button
@@ -791,21 +792,21 @@ export default function MetaphorCreator() {
                   Metaphor Insights
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-pink-500/10">
+                  <div className="bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-gray-700">
                     <h4 className="text-sm font-semibold mb-4 text-pink-300">Context Distribution</h4>
                     <Pie data={getContextChartData()} />
                   </div>
-                  <div className="bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-pink-500/10">
+                  <div className="bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-gray-700">
                     <h4 className="text-sm font-semibold mb-4 text-pink-300">Most Used Sources</h4>
                     <Bar data={getSourceChartData()} />
                   </div>
-                  <div className="bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-pink-500/10">
+                  <div className="bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-gray-700">
                     <h4 className="text-sm font-semibold mb-4 text-pink-300">Most Used Targets</h4>
                     <Bar data={getTargetChartData()} />
                   </div>
                 
                 {favorites.length > 0 && (
-                  <div className="mt-6 bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-pink-500/10">
+                  <div className="mt-6 bg-slate-950/70 rounded-xl p-6 backdrop-blur-sm border border-gray-700">
                     <h4 className="text-sm font-semibold mb-4 text-pink-300">Favorites Breakdown</h4>
                     <Pie data={getFavoritesChartData()} />
                   </div>
@@ -816,7 +817,7 @@ export default function MetaphorCreator() {
           )}
         </div>
 
-        <div className="w-full md:w-1/4 px-6 py-8 bg-slate-950/80 border-l border-pink-500/10 order-1 md:order-2 md:overflow-y-auto backdrop-blur-lg">
+        <div className="w-full md:w-1/4 px-6 py-8 bg-slate-950/80 border-l border-gray-700 order-1 md:order-2 md:overflow-y-auto backdrop-blur-lg">
           <h3 className="text-xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-rose-300 text-center flex items-center justify-center">
             <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-rose-500 rounded-md flex items-center justify-center mr-2">
               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -827,13 +828,13 @@ export default function MetaphorCreator() {
           </h3>
 
           <div className="space-y-6">
-            <div className="bg-black/20 rounded-2xl p-6 border border-pink-500/10 shadow-xl backdrop-blur-sm">
+            <div className="bg-black/20 rounded-2xl p-6 border border-gray-700 shadow-xl backdrop-blur-sm">
               <h4 className="font-semibold mb-4 flex items-center text-pink-300">
                 <span className="mr-2">🌟</span> Example Pairs
               </h4>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div
-                  className="p-3 bg-slate-900/60 rounded-xl border border-pink-500/10 hover:border-pink-400/30 hover:bg-pink-500/5 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="p-3 bg-slate-900/60 rounded-xl border border-gray-700/10 hover:border-pink-400/30 hover:bg-pink-500/5 transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => handleExampleClick("பறவை", "ஆவல்","சுதந்திரம்")}
                 >
                   <div className="font-medium text-pink-300 group-hover:text-pink-200">பறவை</div>
@@ -841,7 +842,7 @@ export default function MetaphorCreator() {
                   <div className="text-xs text-pink-400/70 mt-1">சுதந்திரம்</div>
                 </div>
                 <div
-                  className="p-3 bg-slate-900/60 rounded-xl border border-pink-500/10 hover:border-pink-400/30 hover:bg-pink-500/5 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="p-3 bg-slate-900/60 rounded-xl border border-gray-700/10 hover:border-pink-400/30 hover:bg-pink-500/5 transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => handleExampleClick("கல்", "உணர்வு","தடுப்பு")}
                 >
                   <div className="font-medium text-pink-300 group-hover:text-pink-200">கல்</div>
@@ -849,7 +850,7 @@ export default function MetaphorCreator() {
                   <div className="text-xs text-pink-400/70 mt-1">தடுப்பு</div>
                 </div>
                 <div
-                  className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="p-3 bg-slate-800/40 rounded-xl border border-gray-700/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => handleExampleClick("நதி", "நினைவுகள்","ஓட்டம்")}
                 >
                   <div className="font-medium text-pink-300 group-hover:text-pink-200">நதி</div>
@@ -857,7 +858,7 @@ export default function MetaphorCreator() {
                   <div className="text-xs text-pink-400/70 mt-1">ஓட்டம்</div>
                 </div>
                 <div
-                  className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="p-3 bg-slate-800/40 rounded-xl border border-gray-700/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => handleExampleClick("விழி", "மனம்","பார்வை")}
                 >
                   <div className="font-medium text-pink-300 group-hover:text-pink-200">விழி</div>
@@ -865,7 +866,7 @@ export default function MetaphorCreator() {
                   <div className="text-xs text-pink-400/70 mt-1">பார்வை</div>
                 </div>
                 <div
-                  className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="p-3 bg-slate-800/40 rounded-xl border border-gray-700/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => handleExampleClick("தேன்", "பாசம்","இனிமை")}
                 >
                   <div className="font-medium text-pink-300 group-hover:text-pink-200">தேன்</div>
@@ -873,7 +874,7 @@ export default function MetaphorCreator() {
                   <div className="text-xs text-pink-400/70 mt-1">இனிமை</div>
                 </div>
                 <div
-                  className="p-3 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
+                  className="p-3 bg-slate-800/40 rounded-xl border border-gray-700/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group hover:scale-105"
                   onClick={() => handleExampleClick("இரவு", "துன்பம்","மறைவு")}
                 >
                   <div className="font-medium text-pink-300 group-hover:text-pink-200">இரவு</div>
@@ -883,8 +884,8 @@ export default function MetaphorCreator() {
               </div>
             </div>
 
-            <div className="bg-black/20 rounded-2xl p-6 border border-pink-500/10 shadow-xl backdrop-blur-sm">
-              <div className="flex border-b border-pink-500/20 mb-4">
+            <div className="bg-black/20 rounded-2xl p-6 border border-gray-700 shadow-xl backdrop-blur-sm">
+              <div className="flex border-b border-gray-700/20 mb-4">
                 <button
                   className={`py-3 px-4 text-sm font-medium transition-all duration-300 ${
                     activeTab === "history"
@@ -911,7 +912,7 @@ export default function MetaphorCreator() {
                 <>
                   {currentUser ? (
                     metaphorHistory.length === 0 ? (
-                      <div className="text-sm text-gray-400 bg-slate-950/50 p-4 rounded-xl border border-pink-500/10 text-center">
+                      <div className="text-sm text-gray-400 bg-slate-950/50 p-4 rounded-xl border border-gray-700/10 text-center">
                         No history yet. Generate your first metaphor!
                       </div>
                     ) : (
@@ -921,7 +922,7 @@ export default function MetaphorCreator() {
                           {metaphorHistory.map((h, i) => (
                             <li
                               key={h.id}
-                              className="p-4 bg-slate-800/40 rounded-xl border border-pink-500/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group"
+                              className="p-4 bg-slate-800/40 rounded-xl border border-gray-700/20 hover:border-pink-400/50 hover:bg-pink-500/10 transition-all duration-300 cursor-pointer group"
                               onClick={() => loadFromHistory(h)}
                             >
                               <div className="flex justify-between mb-2">
@@ -929,7 +930,7 @@ export default function MetaphorCreator() {
                                   {h.source} → {h.target}
                                 </span>
                                 <div className="flex items-center space-x-2">
-                                  <span className="text-xs bg-pink-600/20 px-2 py-1 rounded-lg text-pink-300 border border-pink-500/30">
+                                  <span className="text-xs bg-pink-600/20 px-2 py-1 rounded-lg text-pink-300 border border-gray-700/30">
                                     {h.Context}
                                   </span>
                                   <button
@@ -977,7 +978,7 @@ export default function MetaphorCreator() {
                       </>
                     )
                   ) : (
-                    <div className="text-sm text-gray-400 bg-slate-800/30 p-4 rounded-xl border border-pink-500/20 text-center">
+                    <div className="text-sm text-gray-400 bg-slate-800/30 p-4 rounded-xl border border-gray-700/20 text-center">
                       Please log in to see your metaphor history.
                     </div>
                   )}
@@ -987,7 +988,7 @@ export default function MetaphorCreator() {
               {activeTab === "favorites" && (
                 <>
                   {favorites.length === 0 ? (
-                    <div className="text-sm text-gray-400 bg-slate-800/30 p-4 rounded-xl border border-pink-500/20 text-center">
+                    <div className="text-sm text-gray-400 bg-slate-800/30 p-4 rounded-xl border border-gray-700/20 text-center">
                       No favorites yet. Click the star icon to save a metaphor!
                     </div>
                   ) : (
@@ -995,7 +996,7 @@ export default function MetaphorCreator() {
                       {favorites.map((f, i) => (
                         <li
                           key={i}
-                          className="p-4 bg-slate-800/40 rounded-xl border border-pink-500/20 group hover:bg-pink-500/10 transition-all duration-300"
+                          className="p-4 bg-slate-800/40 rounded-xl border border-gray-700/20 group hover:bg-pink-500/10 transition-all duration-300"
                         >
                           <div className="flex justify-between items-center">
                             <p className="text-gray-200 group-hover:text-gray-100">{f}</p>
@@ -1028,7 +1029,7 @@ export default function MetaphorCreator() {
             </div>
           </div>
 
-          <div className="text-xs text-pink-300/70 text-center mt-6 bg-pink-500/5 p-3 rounded-xl border border-pink-500/10">
+          <div className="text-xs text-pink-300/70 text-center mt-6 bg-pink-500/5 p-3 rounded-xl border border-gray-700/10">
             <div className="font-semibold mb-2">💡 Metaphor Creation Guide:</div>
             <div className="text-left space-y-1">
               <div><strong>Vehicle (வாகனம்):</strong> Concrete, tangible concept (பறவை, கல், நதி)</div>
@@ -1042,50 +1043,45 @@ export default function MetaphorCreator() {
         </div>
       </div>
 
-      <footer className="mt-12 py-8 text-center text-gray-400 text-sm border-t border-pink-500/10 bg-slate-950/80 backdrop-blur-lg relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-900/10 to-rose-900/10"></div>
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-4">
-            <div className="flex items-center">
-              <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-rose-500 rounded-lg flex items-center justify-center mr-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <span className="text-pink-300">Metaphor Creator &copy; 2025</span>
-            </div>
-            <span className="hidden md:inline text-pink-500">|</span>
-            <div className="text-pink-300">Created by Group-23</div>
-          </div>
-          <p className="mt-3 text-pink-400/70 text-xs">Powered by creative language processing</p>
-
-          <div className="mt-6 flex justify-center space-x-4">
-            <button className="text-gray-500 hover:text-pink-400 transition-all duration-300 p-2 rounded-full hover:bg-pink-500/20 hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-              </svg>
-            </button>
-            <button className="text-gray-500 hover:text-pink-400 transition-all duration-300 p-2 rounded-full hover:bg-pink-500/20 hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.037 10.037 0 01-3.127 1.195 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.16a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.937 4.937 0 004.604 3.417 9.868 9.868 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63a9.936 9.936 0 002.46-2.548l-.047-.02z" />
-              </svg>
-            </button>
-            <button className="text-gray-500 hover:text-pink-400 transition-all duration-300 p-2 rounded-full hover:bg-pink-500/20 hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-              </svg>
-            </button>
+     <footer className="relative text-center py-16 text-gray-400 border-t border-gray-800/50 mt-auto backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        <div className="relative z-10">
+          <p className="mb-6 text-lg font-medium">
+            <span className="text-white">Tamil AI Models</span> &copy; 2025 | Created by
+            <span className="text-violet-400 font-semibold"> Group-23</span>
+          </p>
+          <div className="flex justify-center space-x-8 mt-8">
+            {[
+              {
+                icon: "M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z",
+                color: "hover:text-violet-400",
+                label: "GitHub",
+              },
+              {
+                icon: "M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84",
+                color: "hover:text-emerald-400",
+                label: "Twitter",
+              },
+              {
+                icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z",
+                color: "hover:text-pink-400",
+                label: "Instagram",
+              },
+            ].map((social, idx) => (
+              <a
+                key={idx}
+                href="#"
+                className={`group text-gray-500 ${social.color} transition-all duration-300 transform hover:scale-110`}
+              >
+                <span className="sr-only">{social.label}</span>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-current opacity-20 rounded-full blur-lg scale-150 group-hover:opacity-40 transition-opacity duration-300"></div>
+                  <svg className="relative h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d={social.icon} clipRule="evenodd" />
+                  </svg>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </footer>

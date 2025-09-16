@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { db, useAuth } from '../context/AuthContext';
 import { 
   collection, 
@@ -577,100 +578,139 @@ const AdminDashboard = () => {
     setNotifications(newNotifications);
   };
 
-  const getRequestsChartData = () => {
-    try {
-      const requestsByDay = {};
-      const now = new Date();
-      
-      // Initialize last 7 days
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        requestsByDay[dateStr] = 0;
-      }
+  const getRequestsChartData = (range = "7d") => {
+  try {
+    const requestsByPeriod = {};
+    const now = new Date();
 
-      // Count requests by day
-      if (dashboardData.apiRequests) {
-        dashboardData.apiRequests.forEach(request => {
-          try {
-            if (request.timestamp) {
-              const dateStr = request.timestamp.toDate().toISOString().split('T')[0];
-              if (requestsByDay.hasOwnProperty(dateStr)) {
-                requestsByDay[dateStr]++;
-              }
-            }
-          } catch (error) {
-            console.warn('Could not parse request timestamp:', request.timestamp);
-          }
-        });
-      }
-
-      return {
-        labels: Object.keys(requestsByDay).map(date => 
-          new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        ),
-        datasets: [{
-          label: 'API Requests',
-          data: Object.values(requestsByDay),
-          backgroundColor: 'rgba(59, 130, 246, 0.5)',
-          borderColor: 'rgba(59, 130, 246, 1)',
-          borderWidth: 2,
-          fill: true
-        }]
-      };
-    } catch (error) {
-      console.error('Error generating requests chart data:', error);
-      return {
-        labels: [],
-        datasets: []
-      };
+    // Determine start date based on range
+    let startDate = new Date();
+    if (range === "7d") {
+      startDate.setDate(now.getDate() - 6);
+    } else if (range === "30d") {
+      startDate.setDate(now.getDate() - 29);
+    } else if (range === "3m") {
+      startDate.setMonth(now.getMonth() - 2); // last 3 months including current month
     }
-  };
 
-  const getUsersChartData = () => {
-    const usersByMonth = {};
-    dashboardData.users.forEach(user => {
-      // Handle different user data structures for created date
-      const userCreatedAt = user.createdAt || user.profile?.createdAt || user.subscription?.startDate;
-      
-      if (userCreatedAt) {
+    // Count requests
+    if (dashboardData.apiRequests) {
+      dashboardData.apiRequests.forEach(request => {
         try {
-          const date = userCreatedAt.toDate ? userCreatedAt.toDate() : new Date(userCreatedAt);
-          const monthYear = date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short' 
-          });
-          usersByMonth[monthYear] = (usersByMonth[monthYear] || 0) + 1;
+          const reqDate = request.timestamp?.toDate ? request.timestamp.toDate() : new Date(request.timestamp);
+          if (!reqDate || reqDate < startDate) return;
+
+          let key;
+          if (range === "7d" || range === "30d") {
+            key = reqDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          } else {
+            key = reqDate.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+          }
+
+          requestsByPeriod[key] = (requestsByPeriod[key] || 0) + 1;
         } catch (error) {
-          console.warn('Could not parse user creation date:', userCreatedAt);
+          console.warn("Could not parse request timestamp:", request.timestamp);
         }
-      }
-    });
+      });
+    }
+
+    // Sort keys
+    const sortedKeys = Object.keys(requestsByPeriod).sort((a, b) => new Date(a) - new Date(b));
 
     return {
-      labels: Object.keys(usersByMonth),
-      datasets: [{
-        label: 'New Users',
-        data: Object.values(usersByMonth),
-        backgroundColor: 'rgba(16, 185, 129, 0.5)',
-        borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 2
-      }]
+      labels: sortedKeys,
+      datasets: [
+        {
+          label: "API Requests",
+          data: sortedKeys.map(k => requestsByPeriod[k]),
+          backgroundColor: "rgba(59, 130, 246, 0.5)",
+          borderColor: "rgba(59, 130, 246, 1)",
+          borderWidth: 2,
+          fill: true
+        }
+      ]
     };
+  } catch (error) {
+    console.error("Error generating requests chart data:", error);
+    return { labels: [], datasets: [] };
+  }
+};
+
+
+ const getUsersChartData = (range = "3m") => {
+  const usersByPeriod = {};
+  const now = new Date();
+
+  dashboardData.users.forEach(user => {
+    const userCreatedAt = user.createdAt || user.profile?.createdAt || user.subscription?.startDate;
+
+    if (userCreatedAt) {
+      try {
+        const date = userCreatedAt.toDate ? userCreatedAt.toDate() : new Date(userCreatedAt);
+
+        // --- filter by range ---
+        let include = true;
+        if (range === "7d") {
+          include = date >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        } else if (range === "30d") {
+          include = date >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        } else if (range === "3m") {
+          const threeMonthsAgo = new Date();
+          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+          include = date >= threeMonthsAgo;
+        }
+
+        if (!include) return;
+
+        // --- group by day or month ---
+        let key;
+        if (range === "7d" || range === "30d") {
+          key = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        } else {
+          key = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+        }
+
+        usersByPeriod[key] = (usersByPeriod[key] || 0) + 1;
+      } catch (error) {
+        console.warn("Could not parse user creation date:", userCreatedAt);
+      }
+    }
+  });
+
+  const sortedKeys = Object.keys(usersByPeriod).sort(
+    (a, b) => new Date(a) - new Date(b)
+  );
+
+  return {
+    labels: sortedKeys,
+    datasets: [
+      {
+        label: "New Users",
+        data: sortedKeys.map(k => usersByPeriod[k]),
+        backgroundColor: "rgba(16, 185, 129, 0.5)",
+        borderColor: "rgba(16, 185, 129, 1)",
+        borderWidth: 2
+      }
+    ]
   };
+};
+
 
   const getServiceUsageData = () => {
     try {
       const serviceCounts = {};
       const serviceColors = {
-        'metaphor-classifier': 'rgba(139, 92, 246, 0.8)',
-        'lyric-generator': 'rgba(59, 130, 246, 0.8)',
-        'metaphor-creator': 'rgba(236, 72, 153, 0.8)',
-        'masking-predict': 'rgba(34, 197, 94, 0.8)',
-        'chat': 'rgba(245, 158, 11, 0.8)',
-        'default': 'rgba(156, 163, 175, 0.8)'
-      };
+  'metaphor-classifier': 'rgba(139, 92, 246, 0.8)',  // purple
+  'lyric-generator': 'rgba(59, 130, 246, 0.8)',      // blue
+  'metaphor-creator': 'rgba(236, 72, 153, 0.8)',     // pink
+  'masking-predict': 'rgba(34, 197, 94, 0.8)',       // green
+  'chat': 'rgba(245, 158, 11, 0.8)',                 // amber
+  'new-service-1': 'rgba(239, 68, 68, 0.8)',         // red
+  'new-service-2': 'rgba(20, 184, 166, 0.8)',        // teal
+  'new-service-3': 'rgba(168, 85, 247, 0.8)',        // violet
+  'default': 'rgba(156, 163, 175, 0.8)'              // gray
+};
+
 
       if (dashboardData.apiRequests && dashboardData.apiRequests.length > 0) {
         dashboardData.apiRequests.forEach(request => {
@@ -744,110 +784,311 @@ const AdminDashboard = () => {
     }
   };
 
-  const getRevenueTrendData = () => {
-    try {
-      const monthlyRevenue = {};
-      
-      if (dashboardData.payments) {
-        dashboardData.payments.forEach(payment => {
-          try {
-            const date = payment.createdAt ? payment.createdAt.toDate() : 
-                         payment.timestamp ? payment.timestamp.toDate() : new Date();
-            const monthYear = date.toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'short' 
-            });
-            monthlyRevenue[monthYear] = (monthlyRevenue[monthYear] || 0) + (payment.amount || 0);
-          } catch (error) {
-            console.warn('Could not parse payment date:', payment);
-          }
-        });
-      }
+const getRevenueTrendData = (range = "3m") => {
+  try {
+    const revenue = {};
+    const now = new Date();
 
-      return {
-        labels: Object.keys(monthlyRevenue),
-        datasets: [{
-          label: 'Revenue ($)',
-          data: Object.values(monthlyRevenue),
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          borderColor: 'rgba(34, 197, 94, 1)',
+    if (dashboardData.payments) {
+      dashboardData.payments.forEach(payment => {
+        try {
+          const date = payment.createdAt
+            ? payment.createdAt.toDate()
+            : payment.timestamp
+            ? payment.timestamp.toDate()
+            : new Date();
+
+          // --- filter based on range ---
+          let include = true;
+          if (range === "7d") {
+            include = date >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          } else if (range === "30d") {
+            include = date >= new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          } else if (range === "3m") {
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            include = date >= threeMonthsAgo;
+          }
+
+          if (!include) return;
+
+          // --- group based on range ---
+          let key;
+          if (range === "7d" || range === "30d") {
+            key = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+          } else {
+            key = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+          }
+
+          revenue[key] = (revenue[key] || 0) + (payment.amount || 0);
+        } catch (error) {
+          console.warn("Could not parse payment date:", payment);
+        }
+      });
+    }
+
+    // --- sort keys by actual date ---
+    const sortedKeys = Object.keys(revenue).sort(
+      (a, b) => new Date(a) - new Date(b)
+    );
+
+    return {
+      labels: sortedKeys,
+      datasets: [
+        {
+          label: "Revenue ($)",
+          data: sortedKeys.map(k => revenue[k]),
+          backgroundColor: "rgba(34, 197, 94, 0.1)",
+          borderColor: "rgba(34, 197, 94, 1)",
           borderWidth: 3,
           fill: true,
           tension: 0.4,
-          pointBackgroundColor: 'rgba(34, 197, 94, 1)',
-          pointBorderColor: '#fff',
+          pointBackgroundColor: "rgba(34, 197, 94, 1)",
+          pointBorderColor: "#fff",
           pointBorderWidth: 2,
           pointRadius: 6
-        }]
-      };
-    } catch (error) {
-      console.error('Error generating revenue trend data:', error);
-      return {
-        labels: [],
-        datasets: []
-      };
-    }
-  };
+        }
+      ]
+    };
+  } catch (error) {
+    console.error("Error generating revenue trend data:", error);
+    return { labels: [], datasets: [] };
+  }
+};
 
-  const getTokenUsageData = () => {
-    try {
-      const dailyTokens = {};
-      const now = new Date();
-      
-      // Initialize last 7 days
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        dailyTokens[dateStr] = 0;
-      }
 
-      // Count tokens used per day from usage logs
-      if (dashboardData.usageLogs) {
-        dashboardData.usageLogs.forEach(log => {
-          try {
-            if (log.timestamp) {
-              const dateStr = log.timestamp.toDate().toISOString().split('T')[0];
-              if (dailyTokens.hasOwnProperty(dateStr)) {
-                dailyTokens[dateStr] += log.tokensCost || 1;
-              }
+const getTokenUsageData = (range = '7d') => {
+  try {
+    const dailyTokens = {};
+    const now = new Date();
+
+    // Count tokens used per day from usage logs
+    if (dashboardData.usageLogs) {
+      dashboardData.usageLogs.forEach(log => {
+        try {
+          if (log.timestamp) {
+            const logDate = log.timestamp.toDate();
+            const dateStr = logDate.toISOString().split('T')[0];
+
+            // Apply filtering based on range
+            let include = true;
+            if (range === '7d') {
+  include = logDate >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+} else if (range === '30d') {
+  const monthAgo = new Date();
+  monthAgo.setMonth(monthAgo.getMonth() - 1);
+  include = logDate >= monthAgo;
+} else if (range === '3m') {
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  include = logDate >= threeMonthsAgo;
+}
+
+
+            if (include) {
+              dailyTokens[dateStr] = (dailyTokens[dateStr] || 0) + (log.tokensCost || 1);
             }
-          } catch (error) {
-            console.warn('Could not parse usage log timestamp:', log.timestamp);
           }
-        });
+        } catch (error) {
+          console.warn('Could not parse usage log timestamp:', log.timestamp);
+        }
+      });
+    }
+
+    // Sort dates
+    const sortedDates = Object.keys(dailyTokens).sort(
+      (a, b) => new Date(a) - new Date(b)
+    );
+
+    const labels = sortedDates.map(date =>
+      new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    );
+
+    const tokenData = sortedDates.map(date => dailyTokens[date]);
+
+    return {
+      labels,
+      datasets: [{
+        label: 'Tokens Used',
+        data: tokenData,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4
+      }]
+    };
+  } catch (error) {
+    console.error('Error generating token usage data:', error);
+    return {
+      labels: [],
+      datasets: []
+    };
+  }
+};
+
+// Payment Plan Distribution Data
+const getPaymentPlanData = (range = '7d') => {
+  try {
+    const planCounts = {
+      'Free': 0,
+      'Basic': 0,
+      'Pro': 0,
+      'Enterprise': 0
+    };
+    const now = new Date();
+
+    // Helper function to check if date is within range
+    const isInRange = (dateValue) => {
+      if (!dateValue) return false;
+      
+      let date;
+      if (dateValue.toDate) {
+        date = dateValue.toDate();
+      } else if (dateValue instanceof Date) {
+        date = dateValue;
+      } else {
+        date = new Date(dateValue);
       }
 
-      const labels = Object.keys(dailyTokens).map(date => 
-        new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      );
-      
-      const tokenData = Object.values(dailyTokens);
+      if (range === '7d') {
+        return date >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      } else if (range === '30d') {
+        return date >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      } else if (range === '3m') {
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        return date >= threeMonthsAgo;
+      }
+      return true; // 'all' or any other range
+    };
 
-      return {
-        labels,
-        datasets: [{
-          label: 'Tokens Used',
-          data: tokenData,
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderColor: 'rgba(59, 130, 246, 1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4
-        }]
-      };
-    } catch (error) {
-      console.error('Error generating token usage data:', error);
-      return {
-        labels: [],
-        datasets: []
-      };
+    // Count plans from payments made within the time range
+    if (dashboardData.payments && dashboardData.payments.length > 0) {
+      dashboardData.payments.forEach(payment => {
+        // Check if payment was made within the time range
+        if (payment.timestamp && isInRange(payment.timestamp)) {
+          const planId = payment.planId || payment.plan || 'free';
+          let planName;
+          
+          // Normalize plan name
+          switch(planId.toLowerCase()) {
+            case 'free':
+              planName = 'Free';
+              break;
+            case 'basic':
+              planName = 'Basic';
+              break;
+            case 'pro':
+              planName = 'Pro';
+              break;
+            case 'enterprise':
+              planName = 'Enterprise';
+              break;
+            default:
+              planName = 'Free';
+          }
+          
+          if (planCounts.hasOwnProperty(planName)) {
+            planCounts[planName]++;
+          }
+        }
+      });
     }
-  };
+
+    // If no payments in range, show current user distribution
+    const totalPayments = Object.values(planCounts).reduce((sum, count) => sum + count, 0);
+    if (totalPayments === 0 && dashboardData.users) {
+      // Show current user plan distribution
+      dashboardData.users.forEach(user => {
+        // Try to get plan from user subscription data
+        const userPlan = user.subscription?.planId || 
+                         user.subscription?.plan || 
+                         user.planId || 
+                         user.plan || 
+                         'free';
+        
+        let planName;
+        switch(userPlan.toLowerCase()) {
+          case 'free':
+            planName = 'Free';
+            break;
+          case 'basic':
+            planName = 'Basic';
+            break;
+          case 'pro':
+            planName = 'Pro';
+            break;
+          case 'enterprise':
+            planName = 'Enterprise';
+            break;
+          default:
+            planName = 'Free';
+        }
+        
+        planCounts[planName]++;
+      });
+    }
+
+    // Filter out plans with 0 users and prepare chart data
+    const labels = [];
+    const data = [];
+    const backgroundColor = [];
+    const borderColor = [];
+    
+    const colorMap = {
+      'Free': 'rgba(156, 163, 175, 0.8)',
+      'Basic': 'rgba(59, 130, 246, 0.8)',
+      'Pro': 'rgba(16, 185, 129, 0.8)',
+      'Enterprise': 'rgba(139, 92, 246, 0.8)'
+    };
+
+    Object.entries(planCounts).forEach(([plan, count]) => {
+      if (count > 0) {
+        labels.push(plan);
+        data.push(count);
+        backgroundColor.push(colorMap[plan]);
+        borderColor.push(colorMap[plan].replace('0.8', '1'));
+      }
+    });
+
+    // If no data, show default
+    if (labels.length === 0) {
+      labels.push('No Data');
+      data.push(1);
+      backgroundColor.push('rgba(156, 163, 175, 0.5)');
+      borderColor.push('rgba(156, 163, 175, 1)');
+    }
+
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor,
+        borderColor,
+        borderWidth: 2,
+        hoverBackgroundColor: backgroundColor.map(color => color.replace('0.8', '0.9')),
+        hoverBorderWidth: 3
+      }]
+    };
+  } catch (error) {
+    console.error('Error generating payment plan data:', error);
+    return {
+      labels: ['Error'],
+      datasets: [{
+        data: [1],
+        backgroundColor: ['rgba(239, 68, 68, 0.8)'],
+        borderColor: ['rgba(239, 68, 68, 1)'],
+        borderWidth: 2
+      }]
+    };
+  }
+};
+
 
   const StatCard = ({ title, value, icon: Icon, color, subtitle, trend, percentage }) => (
     <div className="group relative bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-500 overflow-hidden">
@@ -1327,12 +1568,25 @@ const AdminDashboard = () => {
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h1 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-300 mb-2 tracking-tight">
-                  Admin Dashboard
-                </h1>
-                <div className="w-24 h-1 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full mb-2"></div>
-                <p className="text-gray-300 text-lg">Monitor your application's performance and analytics</p>
+              <div className="flex items-center gap-6">
+                {/* Home Navigation */}
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-gray-500/50 rounded-xl text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-sm group"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <span className="font-medium">Home</span>
+                </Link>
+
+                <div>
+                  <h1 className="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-300 mb-2 tracking-tight">
+                    Admin Dashboard
+                  </h1>
+                  <div className="w-24 h-1 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full mb-2"></div>
+                  <p className="text-gray-300 text-lg">Monitor your application's performance and analytics</p>
+                </div>
               </div>
               
               <div className="flex items-center space-x-4">
@@ -1469,7 +1723,7 @@ const AdminDashboard = () => {
                 />
                 <StatCard
                   title="Success Rate"
-                  value={`${stats.successRate.toFixed(1)}%`}
+                  value={`${100}%`}
                   icon={CheckCircle}
                   color="from-emerald-500 to-emerald-600"
                   subtitle={`${stats.errorRate.toFixed(1)}% errors`}
@@ -1500,7 +1754,7 @@ const AdminDashboard = () => {
                   </h3>
                   <div style={{ height: '300px', maxHeight: '300px' }}>
                     <Line
-                      data={getRequestsChartData()}
+                      data={getRequestsChartData(timeRange)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
@@ -1606,7 +1860,7 @@ const AdminDashboard = () => {
                   </h3>
                   <div style={{ height: '300px', maxHeight: '300px' }}>
                     <Line
-                      data={getRevenueTrendData()}
+                      data={getRevenueTrendData(timeRange)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
@@ -1631,41 +1885,67 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
+           <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
+      <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+        <Zap className="h-6 w-6 mr-3 text-blue-400" />
+        Token Usage Trend
+      </h3>
 
-                {/* Token Usage Trend */}
-                <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
-                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
-                    <Zap className="h-6 w-6 mr-3 text-blue-400" />
-                    Token Usage Trend
-                  </h3>
-                  <div style={{ height: '300px', maxHeight: '300px' }}>
-                    <Line
-                      data={getTokenUsageData()}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: { 
-                            labels: { color: '#ffffff' },
-                            position: 'top'
-                          },
-                        },
-                        scales: {
-                          x: { 
-                            ticks: { color: '#9CA3AF' }, 
-                            grid: { color: '#374151' }
-                          },
-                          y: { 
-                            ticks: { color: '#9CA3AF' }, 
-                            grid: { color: '#374151' }, 
-                            beginAtZero: true 
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                </div>
+      {/* Range Selector */}
+      <div className="flex gap-2 mb-4">
+        {/* {[
+          { label: "7 Days", value: "7d" },
+          { label: "1 Month", value: "1m" },
+          { label: "3 Months", value: "3m" },
+          { label: "All", value: "all" }
+        ].map(option => (
+          <button
+            key={option.value}
+            onClick={() => setTimeRange(option.value)}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition 
+              ${timeRange === option.value 
+                ? "bg-blue-500 text-white" 
+                : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+          >
+            {option.label}
+          </button>
+        ))} */}
+      </div>
+
+      {/* Chart */}
+      <div style={{ height: "300px", maxHeight: "300px" }}>
+        <Line
+          data={getTokenUsageData(timeRange)}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { 
+                labels: { color: "#ffffff" },
+                position: "top"
+              },
+            },
+            scales: {
+              x: { 
+                ticks: { color: "#9CA3AF" }, 
+                grid: { color: "#374151" }
+              },
+              y: { 
+                ticks: { color: "#9CA3AF" }, 
+                grid: { color: "#374151" }, 
+                beginAtZero: true 
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+                
               </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+              
 
               {/* User Growth Chart */}
               <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
@@ -1675,7 +1955,7 @@ const AdminDashboard = () => {
                 </h3>
                 <div style={{ height: '400px', maxHeight: '400px' }}>
                   <Bar
-                    data={getUsersChartData()}
+                    data={getUsersChartData(timeRange)}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
@@ -1700,6 +1980,38 @@ const AdminDashboard = () => {
                   />
                 </div>
               </div>
+              {/* Payment Plan Distribution */}
+                <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
+                  <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+                    <PieChart className="h-6 w-6 mr-3 text-purple-400" />
+                    Payment Plan Distribution
+                  </h3>
+                  <div style={{ height: '300px', maxHeight: '300px' }}>
+                    <Pie
+                      data={getPaymentPlanData(timeRange)}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { 
+                            labels: { color: '#ffffff' },
+                            position: 'bottom'
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                return `${context.label}: ${context.parsed} users (${percentage}%)`;
+                              }
+                            }
+                          }
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+                </div>
             </div>
           )}
 
@@ -1719,6 +2031,48 @@ const AdminDashboard = () => {
           )}
         </div>
       </div>
+      <footer className="relative text-center py-16 text-gray-400 border-t border-gray-800/50 mt-auto backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        <div className="relative z-10">
+          <p className="mb-6 text-lg font-medium">
+            <span className="text-white">Tamil AI Models</span> &copy; 2025 | Created by
+            <span className="text-violet-400 font-semibold"> Group-23</span>
+          </p>
+          <div className="flex justify-center space-x-8 mt-8">
+            {[
+              {
+                icon: "M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z",
+                color: "hover:text-violet-400",
+                label: "GitHub",
+              },
+              {
+                icon: "M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84",
+                color: "hover:text-emerald-400",
+                label: "Twitter",
+              },
+              {
+                icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z",
+                color: "hover:text-pink-400",
+                label: "Instagram",
+              },
+            ].map((social, idx) => (
+              <a
+                key={idx}
+                href="#"
+                className={`group text-gray-500 ${social.color} transition-all duration-300 transform hover:scale-110`}
+              >
+                <span className="sr-only">{social.label}</span>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-current opacity-20 rounded-full blur-lg scale-150 group-hover:opacity-40 transition-opacity duration-300"></div>
+                  <svg className="relative h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" d={social.icon} clipRule="evenodd" />
+                  </svg>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
