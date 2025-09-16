@@ -14,9 +14,9 @@ export default function TokenCostBanner({ service, className = '' }) {
       <div className={`bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3 ${className}`}>
         <Zap className="w-5 h-5 text-blue-400" />
         <div className="flex-1">
-          <div className="text-blue-300 font-medium">
+          {/* <div className="text-blue-300 font-medium">
             This service costs {cost} token{cost > 1 ? 's' : ''} per use
-          </div>
+          </div> */}
           <div className="text-blue-400/70 text-sm">
             You have {remainingTokens} tokens remaining
           </div>
