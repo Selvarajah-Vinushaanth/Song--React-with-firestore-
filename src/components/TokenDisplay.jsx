@@ -22,7 +22,7 @@ export default function TokenDisplay({ className = '', showUpgrade = true }) {
   };
 
   return (
-    <div className={`bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 border border-gray-700 ${className}`}>
+    <div className={`bg-black-800/80 backdrop-blur-sm rounded-lg p-4 border border-gray-700 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Zap className={`w-5 h-5 ${getStatusColor()}`} />

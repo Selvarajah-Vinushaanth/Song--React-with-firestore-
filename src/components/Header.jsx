@@ -103,7 +103,7 @@ useEffect(() => {
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-7xl px-2 sm:px-4 lg:px-6 relative">
         <div className="flex h-20 items-center">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
@@ -118,8 +118,8 @@ useEffect(() => {
           </div>
 
           {/* Navigation - Centered */}
-          <nav className="flex-1 flex justify-center items-center space-x-6 sm:space-x-8">
-            {/* <Link 
+          <nav className="flex-1 flex justify-end items-center ml-60 space-x-8">
+            <Link 
               to="/" 
               className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 isActive('/') 
@@ -128,11 +128,11 @@ useEffect(() => {
               }`}
             >
               Home
-            </Link> */}
+            </Link>
             
             {currentUser ? (
               <>
-                {/* <Link 
+                <Link 
                   to="/chat" 
                   className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                     isActive('/chat') 
@@ -141,7 +141,7 @@ useEffect(() => {
                   }`}
                 >
                   Chat
-                </Link> */}
+                </Link>
                 
                 {/* API Keys */}
                 <Link
@@ -209,127 +209,35 @@ useEffect(() => {
                   </Link>
                 ) : null}
 
-                {/* Subscription Dropdown */}
-                <div className="relative" ref={subscriptionDropdownRef}>
-                  <button
-                    onClick={() => setSubscriptionDropdownOpen(!subscriptionDropdownOpen)}
-                    className={`relative px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 border ${
-                      isActive('/subscription') || subscriptionDropdownOpen
-                        ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 text-emerald-300 border-emerald-500/30 shadow-inner'
-                        : 'text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-emerald-600/10 hover:to-teal-600/10 border-transparent hover:border-emerald-600/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                      </svg>
-                      <div className="flex flex-col">
-                        <span>Subscription</span>
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
-                            currentPlan === 'Enterprise' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white' :
-                            currentPlan === 'Pro' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' :
-                            currentPlan === 'Basic' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' :
-                            'bg-gray-600 text-gray-200'
-                          }`}>
-                            {currentPlan}
-                          </span>
-                          <span className="text-gray-400">•</span>
-                          <span className={`font-medium ${tokens <= 10 ? 'text-red-400' : tokens <= 50 ? 'text-yellow-400' : 'text-emerald-400'}`}>
-                            {tokens} tokens
-                          </span>
-                        </div>
-                      </div>
-                      <svg 
-                        className={`h-4 w-4 transition-transform duration-200 ${subscriptionDropdownOpen ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                    {(isActive('/subscription') || subscriptionDropdownOpen) && (
-                      <span className="absolute -bottom-[1px] inset-x-4 h-[2px] bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full"></span>
-                    )}
-                  </button>
 
-                  {/* Subscription Dropdown Menu */}
-                  {subscriptionDropdownOpen && (
-                    <div className="absolute top-full right-0 mt-2 w-80 bg-gray-800/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl py-2 z-50">
-                      {/* Token Status */}
-                      <div className="px-4 py-3 border-b border-gray-700/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-300">Token Balance</span>
-                          <span className={`text-lg font-bold ${tokens <= 10 ? 'text-red-400' : tokens <= 50 ? 'text-yellow-400' : 'text-emerald-400'}`}>
-                            {tokens}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              tokens <= 10 ? 'bg-gradient-to-r from-red-500 to-red-600' :
-                              tokens <= 50 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
-                              'bg-gradient-to-r from-emerald-500 to-teal-500'
-                            }`}
-                            style={{ width: `${Math.min((tokens / 1000) * 100, 100)}%` }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-400 mt-1">
-                          <span>Current Plan: {currentPlan}</span>
-                          <span>Next billing: {subscription?.nextBilling || 'N/A'}</span>
-                        </div>
-                      </div>
+{/* Subscription Info as Link */}
+<Link
+  to="/subscription"
+  className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm sm:text-base font-medium 
+               shadow-inner hover:bg-gray-700/70 transition-colors"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+  </svg>
 
-                      {/* Quick Actions */}
-                      <div className="py-2">
-                        <Link
-                          to="/subscription"
-                          onClick={() => setSubscriptionDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                        >
-                          <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                          Manage Subscription
-                        </Link>
-                        
-                        <Link
-                          to="/subscription"
-                          onClick={() => setSubscriptionDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                        >
-                          <svg className="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          Upgrade Plan
-                        </Link>
-                        
-                        <Link
-                          to="/subscription"
-                          onClick={() => setSubscriptionDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                        >
-                          <svg className="h-4 w-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Payment History
-                        </Link>
-                        
-                        {tokens <= 50 && (
-                          <div className="mx-2 my-2 p-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-lg">
-                            <div className="flex items-center gap-2 text-xs text-orange-300">
-                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 15.5c-.77.833.192 2.5 1.732 2.5z" />
-                              </svg>
-                              <span>Low token balance - Consider upgrading!</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+  <div className="flex flex-col">
+    <span className="text-gray-300 font-medium">Subscription</span>
+    <div className="flex items-center gap-2 text-sm">
+      <span className={`px-2 py-0.5 rounded-full font-semibold ${
+        currentPlan === 'Enterprise' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white' :
+        currentPlan === 'Pro' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white' :
+        currentPlan === 'Basic' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' :
+        'bg-gray-600 text-gray-200'
+      }`}>
+        {currentPlan}
+      </span>
+      <span className="text-gray-400">•</span>
+      <span className={`font-medium ${tokens <= 10 ? 'text-red-400' : tokens <= 50 ? 'text-yellow-400' : 'text-emerald-400'}`}>
+        {tokens} tokens
+      </span>
+    </div>
+  </div>
+</Link>
 
                 {/* Shortcuts */}
                 <button

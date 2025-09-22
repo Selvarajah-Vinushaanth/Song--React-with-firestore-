@@ -21,7 +21,7 @@ try:
     app = firebase_admin.get_app()
 except ValueError:
     # If not, initialize it
-    cred = credentials.Certificate("../song-writing-assistant-4cd39-firebase-adminsdk-fbsvc-8ddefda8ac.json")
+    cred = credentials.Certificate("../song-writing-assistant-4cd39-firebase-adminsdk-fbsvc-6d40c4e659.json")
     app = firebase_admin.initialize_app(cred)
 
 # Get Firestore client
@@ -376,7 +376,44 @@ async def generate_lyrics_v1(request: LyricsRequest, user_id: str = Depends(vali
         latency_ms = int((time.time() - start_time) * 1000)
         await log_api_request_test(user_id, "/api/v1/generate-lyrics", 500, latency_ms)
         raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
+    
+# Agent    
 
+class LyricsRequestRealAgent(BaseModel):
+    name: str                     # required by Agent node
+    motion: str                   # required by Agent node
+    date: Optional[str] = None    # optional
+    seed: Optional[str] = ""      # optional
+    count: int = 3                # optional with default
+
+
+class LyricsResponse(BaseModel):
+    lyrics: list[str]
+
+@app.post("/api/generate-lyrics-agent", response_model=LyricsResponse)
+async def create_lyrics(request:LyricsRequestRealAgent):
+    try:
+        print(request)
+        print(f"Received lyric request: Name={request.name}, Date={request.date}, Motion={request.motion}, Seed={request.seed}, Count={request.count}")
+        
+        # Generate main lyric
+        main_lyric = generate_lyrics_text(motion=request.motion, seed=request.seed)
+
+        # Generate additional lyrics based on count (count - 1 more lyrics)
+        more_lyrics = [generate_lyrics_text(motion=request.motion, seed="") for _ in range(request.count - 1)]
+
+        # Combine all lyrics
+        all_lyrics = [main_lyric] + more_lyrics
+        print(f"Generated total {len(all_lyrics)} lyrics")
+
+        # Optional logging using name and date
+        # await log_api_request(request.name, "lyric-generator", 200, 500, date=request.date)
+
+        return {"lyrics": all_lyrics}
+
+    except Exception as e:
+        print(f"Error generating lyrics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Song Analysis API"}

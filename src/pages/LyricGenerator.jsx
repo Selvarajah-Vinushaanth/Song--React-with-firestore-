@@ -850,7 +850,7 @@ export default function LyricGenerator() {
 
                 {/* Enhanced List View */}
                 {viewMode === "list" && (
-                  <div className="space-y-4 bg-white/5 rounded-2xl p-6 border border-white/20 backdrop-blur-sm">
+                  <div className="space-y-4 bg-black rounded-2xl p-6 border border-white/20 backdrop-blur-sm">
                     {parsedLyrics.map((lyric, index) => (
                       <div
                         key={index}

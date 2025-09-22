@@ -177,7 +177,7 @@ export default function SubscriptionDashboard() {
               <div className="bg-white/10 rounded-lg p-3 text-center">
                 <div className="text-2xl mb-1">🕵️‍♂️</div>
                 <div className="text-sm text-white/80">Masking Predict</div>
-                <div className="font-semibold">1 token/suggestion</div>
+                <div className="font-semibold">mask count × suggestion count</div>
               </div>
             </div>
 
@@ -191,7 +191,7 @@ export default function SubscriptionDashboard() {
                 <p>• <strong>Metaphor Classifier:</strong> Pay 1 token per line of text you analyze</p>
                 <p>• <strong>Lyric Generator:</strong> Pay 1 token per lyric generated (choose 1-5 lyrics)</p>
                 <p>• <strong>Metaphor Creator:</strong> Pay 1 token per metaphor created (choose 1-5 metaphors)</p>
-                <p>• <strong>Masking Predict:</strong> Pay 1 token per suggestion requested (choose 2-10 suggestions)</p>
+                <p>• <strong>Masking Predict:</strong> Cost = mask count × suggestion count tokens (choose 2-10 suggestions)</p>
               </div>
             </div>
           </div>

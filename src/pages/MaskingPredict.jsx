@@ -572,7 +572,7 @@ export default function MaskingPredict() {
           },
           body: JSON.stringify({
             text: tempText,
-            top_k: Math.min(count, 6), // Limit suggestions for multiple masks
+            top_k: Math.min(count, 10), // Limit suggestions for multiple masks
             userId:currentUser.uid
           }),
         })
