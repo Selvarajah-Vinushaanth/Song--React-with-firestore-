@@ -119,7 +119,7 @@ useEffect(() => {
 
           {/* Navigation - Centered */}
           <nav className="flex-1 flex justify-end items-center ml-60 space-x-8">
-            <Link 
+            {/* <Link 
               to="/" 
               className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                 isActive('/') 
@@ -128,7 +128,7 @@ useEffect(() => {
               }`}
             >
               Home
-            </Link>
+            </Link> */}
             
             {currentUser ? (
               <>
@@ -307,6 +307,7 @@ useEffect(() => {
                   <span>Shortcuts</span>
                   <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-indigo-800/80 rounded">?</kbd>
                 </button> */}
+                <nav className="flex-1 flex justify-start items-center ml-100 space-x-8">
                 <Link
                   to="/login"
                   className="px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 text-gray-300 hover:text-white hover:bg-white/5 border border-transparent"
@@ -319,6 +320,7 @@ useEffect(() => {
                 >
                   Sign Up
                 </Link>
+                </nav>
               </>
             )}
           </nav>
