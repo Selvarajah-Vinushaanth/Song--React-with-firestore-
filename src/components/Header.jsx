@@ -297,7 +297,7 @@ useEffect(() => {
               </>
             ) : (
               <>
-                <button
+                {/* <button
                   onClick={() => setShowShortcutsHelp(true)}
                   className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 text-indigo-300 hover:text-white bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-700/30 hover:border-indigo-600/40"
                 >
@@ -306,7 +306,7 @@ useEffect(() => {
                   </svg>
                   <span>Shortcuts</span>
                   <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-indigo-800/80 rounded">?</kbd>
-                </button>
+                </button> */}
                 <Link
                   to="/login"
                   className="px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 text-gray-300 hover:text-white hover:bg-white/5 border border-transparent"
