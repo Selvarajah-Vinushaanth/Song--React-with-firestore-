@@ -684,6 +684,88 @@ export default function MaskingPredict() {
     }
   }
 
+  const shareToPublicHub = async (contentToShare = null) => {
+    if (!currentUser) {
+      toast.error("Please login to share content to public hub");
+      return;
+    }
+
+    let shareContent = contentToShare;
+    if (!shareContent) {
+      if (inputText && suggestions.length > 0) {
+        shareContent = `Input: ${inputText}\nSuggestions:\n${suggestions.join('\n')}`;
+      } else {
+        toast.error("No predictions to share");
+        return;
+      }
+    }
+
+    try {
+      const result = await Swal.fire({
+        title: 'Share to Public Hub',
+        html: `
+          <div class="text-left">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title (Optional)</label>
+            <input type="text" id="title" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="Give your prediction a title...">
+            
+            <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags (Optional)</label>
+            <input type="text" id="tags" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="e.g., prediction, masking, autocomplete (comma separated)">
+            
+            <label class="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+            <div class="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto text-sm">
+              ${shareContent.substring(0, 200)}${shareContent.length > 200 ? '...' : ''}
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Share',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#7c3aed',
+        customClass: {
+          popup: 'swal-custom-popup'
+        },
+        preConfirm: () => {
+          const title = document.getElementById('title').value;
+          const tags = document.getElementById('tags').value;
+          return { title, tags };
+        }
+      });
+
+      if (result.isConfirmed) {
+        const { title, tags } = result.value;
+        const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+        // Add to public hub collection
+        await addDoc(collection(db, 'publicHub'), {
+          userId: currentUser.uid,
+          userName: currentUser.displayName || currentUser.email.split('@')[0],
+          userEmail: currentUser.email,
+          service: 'masking-predict',
+          content: shareContent,
+          title: title || `Text Prediction`,
+          tags: tagsArray,
+          inputText: inputText,
+          suggestions: suggestions,
+          createdAt: serverTimestamp(),
+          likes: 0,
+          views: 0,
+          isPublic: true
+        });
+
+        toast.success("Successfully shared to Public Hub!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing to public hub:", error);
+      toast.error("Failed to share to public hub. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-gray-100 relative overflow-hidden">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -870,6 +952,26 @@ export default function MaskingPredict() {
                     >
                       Copy Complete
                     </button>
+                    <button
+                      onClick={() => {
+                        const contentToShare = previewSentence && !previewSentence.includes('[mask]') 
+                          ? `Input: ${inputText}\nCompleted: ${previewSentence}\n\nSelected Words:\n${selectedWords.map((word, idx) => word ? `Mask ${idx + 1}: ${word}` : `Mask ${idx + 1}: [not selected]`).join('\n')}`
+                          : null;
+                        shareToPublicHub(contentToShare);
+                      }}
+                      disabled={!previewSentence || previewSentence.includes('[mask]')}
+                      className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/40 rounded-lg text-purple-200 text-sm transition-all duration-200 border border-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                      </svg>
+                      Share to Hub
+                    </button>
                   </div>
                 </div>
 
@@ -982,6 +1084,21 @@ export default function MaskingPredict() {
                         <FiCopy className="text-blue-200 hover:text-blue-100 text-lg" />
                       )}
                       <span>{copyAllStatus ? "Copied All!" : "Copy All"}</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => shareToPublicHub()}
+                      className="flex items-center space-x-2 bg-gradient-to-r from-purple-600/50 to-indigo-600/50 hover:from-purple-500/60 hover:to-indigo-500/60 text-purple-100 px-4 py-2 rounded-lg transition-all duration-300 border border-purple-500/30 text-sm"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                      </svg>
+                      <span>Share to Hub</span>
                     </button>
                     
                     <div className="flex gap-2">

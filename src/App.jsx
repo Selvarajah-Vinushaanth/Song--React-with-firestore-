@@ -24,6 +24,7 @@ import MaskingPredict from './pages/MaskingPredict';
 import AdminDashboard from './pages/AdminDashboard';
 import ApiKeys from './pages/ApiKeys';
 import SubscriptionDashboard from './pages/SubscriptionDashboard';
+import PublicHub from './pages/PublicHub';
 
 // Private Route component
 function PrivateRoute({ children }) {
@@ -132,6 +133,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <MaskingPredict />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/public-hub" 
+                  element={
+                    <PrivateRoute>
+                      <PublicHub />
                     </PrivateRoute>
                   } 
                 />

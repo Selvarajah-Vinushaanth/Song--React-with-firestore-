@@ -359,6 +359,87 @@ export default function LyricGenerator() {
     }
   }
 
+  const shareToPublicHub = async (lyricToShare = null) => {
+    if (!currentUser) {
+      toast.error("Please login to share content to public hub");
+      return;
+    }
+
+    const contentToShare = lyricToShare || generatedLyrics;
+    if (!contentToShare || (typeof contentToShare === 'string' && !contentToShare.trim())) {
+      toast.error("No content to share");
+      return;
+    }
+
+    // Ensure contentToShare is a string
+    const shareText = typeof contentToShare === 'string' ? contentToShare : String(contentToShare);
+
+    try {
+      const result = await Swal.fire({
+        title: 'Share to Public Hub',
+        html: `
+          <div class="text-left">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title (Optional)</label>
+            <input type="text" id="title" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="Give your lyrics a title...">
+            
+            <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags (Optional)</label>
+            <input type="text" id="tags" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="e.g., romantic, sad, energetic (comma separated)">
+            
+            <label class="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+            <div class="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto text-sm">
+              ${shareText.substring(0, 200)}${shareText.length > 200 ? '...' : ''}
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Share',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#3b82f6',
+        customClass: {
+          popup: 'swal-custom-popup'
+        },
+        preConfirm: () => {
+          const title = document.getElementById('title').value;
+          const tags = document.getElementById('tags').value;
+          return { title, tags };
+        }
+      });
+
+      if (result.isConfirmed) {
+        const { title, tags } = result.value;
+        const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+        // Add to public hub collection
+        await addDoc(collection(db, 'publicHub'), {
+          userId: currentUser.uid,
+          userName: currentUser.displayName || currentUser.email.split('@')[0],
+          userEmail: currentUser.email,
+          service: 'lyric-generator',
+          content: shareText,
+          title: title || `Lyrics - ${motion}`,
+          tags: tagsArray,
+          mood: motion,
+          seed: seed,
+          createdAt: serverTimestamp(),
+          likes: 0,
+          views: 0,
+          isPublic: true
+        });
+
+        toast.success("Successfully shared to Public Hub!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing to public hub:", error);
+      toast.error("Failed to share to public hub. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   const handleViewModeChange = (mode) => {
     setViewMode(mode)
   }
@@ -841,6 +922,16 @@ export default function LyricGenerator() {
                     </svg>
                     <span>Download</span>
                   </button>
+
+                  <button
+                    onClick={() => shareToPublicHub()}
+                    className="text-white flex items-center space-x-2 py-2 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 border border-blue-400/30 backdrop-blur-sm hover:shadow-lg"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                    </svg>
+                    <span>Share to Hub</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -865,23 +956,43 @@ export default function LyricGenerator() {
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-lg">
                             {index + 1}
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              copyToClipboard(lyric)
-                            }}
-                            className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/20 transition-all duration-300"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                copyToClipboard(lyric)
+                              }}
+                              className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/20 transition-all duration-300"
+                              title="Copy lyric"
                             >
-                              <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
-                              <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H4a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
-                            </svg>
-                          </button>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
+                                <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H4a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                shareToPublicHub(lyric)
+                              }}
+                              className="text-gray-400 hover:text-blue-400 p-2 rounded-full hover:bg-blue-500/20 transition-all duration-300"
+                              title="Share to Public Hub"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         <p className="text-lg font-tamil leading-relaxed mb-4 text-white">{lyric}</p>
 

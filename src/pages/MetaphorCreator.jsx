@@ -386,6 +386,89 @@ export default function MetaphorCreator() {
     }
   }
 
+  const shareToPublicHub = async (metaphorToShare = null) => {
+    if (!currentUser) {
+      toast.error("Please login to share content to public hub");
+      return;
+    }
+
+    let contentToShare;
+    if (metaphorToShare) {
+      contentToShare = metaphorToShare;
+    } else if (generatedMetaphors.length > 0) {
+      contentToShare = generatedMetaphors.join('\n\n');
+    } else {
+      toast.error("No metaphors to share");
+      return;
+    }
+
+    try {
+      const result = await Swal.fire({
+        title: 'Share to Public Hub',
+        html: `
+          <div class="text-left">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title (Optional)</label>
+            <input type="text" id="title" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="Give your metaphor a title...">
+            
+            <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags (Optional)</label>
+            <input type="text" id="tags" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="e.g., creative, poetic, meaningful (comma separated)">
+            
+            <label class="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+            <div class="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto text-sm">
+              ${contentToShare.substring(0, 200)}${contentToShare.length > 200 ? '...' : ''}
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Share',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ec4899',
+        customClass: {
+          popup: 'swal-custom-popup'
+        },
+        preConfirm: () => {
+          const title = document.getElementById('title').value;
+          const tags = document.getElementById('tags').value;
+          return { title, tags };
+        }
+      });
+
+      if (result.isConfirmed) {
+        const { title, tags } = result.value;
+        const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+        // Add to public hub collection
+        await addDoc(collection(db, 'publicHub'), {
+          userId: currentUser.uid,
+          userName: currentUser.displayName || currentUser.email.split('@')[0],
+          userEmail: currentUser.email,
+          service: 'metaphor-creator',
+          content: contentToShare,
+          title: title || `Metaphor: ${source} → ${target}`,
+          tags: tagsArray,
+          source: source,
+          target: target,
+          context: Context,
+          createdAt: serverTimestamp(),
+          likes: 0,
+          views: 0,
+          isPublic: true
+        });
+
+        toast.success("Successfully shared to Public Hub!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing to public hub:", error);
+      toast.error("Failed to share to public hub. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   const toggleFavorite = async (m) => {
     if (favorites.includes(m)) {
       // Remove from favorites
@@ -784,6 +867,29 @@ export default function MetaphorCreator() {
                       Copy All
                     </>
                   )}
+                </button>
+                <button
+                  onClick={() => shareToPublicHub()}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 rounded-xl text-sm text-white transition-all duration-300 flex items-center gap-2 border border-pink-400/30 backdrop-blur-sm hover:scale-105"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  </svg>
+                  Share to Hub
                 </button>
                 <div className="flex gap-2 ml-4">
                   <button

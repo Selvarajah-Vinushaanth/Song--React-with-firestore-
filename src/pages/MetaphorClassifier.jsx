@@ -131,6 +131,92 @@ export default function MetaphorClassifier() {
       })
     }
   }
+
+  const shareToPublicHub = async (contentToShare = null) => {
+    if (!currentUser) {
+      toast.error("Please login to share content to public hub");
+      return;
+    }
+
+    let shareContent = contentToShare;
+    if (!shareContent) {
+      if (inputText && results.length > 0) {
+        shareContent = `Input Text: ${inputText}\n\nClassification Results:\n${results.map(result => 
+          `${result.text} -> ${result.label} (${Math.round(result.confidence * 100)}% confidence)`
+        ).join('\n')}`;
+      } else {
+        toast.error("No classification result to share");
+        return;
+      }
+    }
+
+    try {
+      const result = await Swal.fire({
+        title: 'Share to Public Hub',
+        html: `
+          <div class="text-left">
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Title (Optional)</label>
+            <input type="text" id="title" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="Give your classification a title...">
+            
+            <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags (Optional)</label>
+            <input type="text" id="tags" class="w-full p-2 border border-gray-300 rounded-md mb-4" placeholder="e.g., metaphor, literal, analysis (comma separated)">
+            
+            <label class="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+            <div class="bg-gray-50 p-3 rounded-md max-h-32 overflow-y-auto text-sm">
+              ${shareContent.substring(0, 200)}${shareContent.length > 200 ? '...' : ''}
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Share',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#059669',
+        customClass: {
+          popup: 'swal-custom-popup'
+        },
+        preConfirm: () => {
+          const title = document.getElementById('title').value;
+          const tags = document.getElementById('tags').value;
+          return { title, tags };
+        }
+      });
+
+      if (result.isConfirmed) {
+        const { title, tags } = result.value;
+        const tagsArray = tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+
+        // Add to public hub collection
+        await addDoc(collection(db, 'publicHub'), {
+          userId: currentUser.uid,
+          userName: currentUser.displayName || currentUser.email.split('@')[0],
+          userEmail: currentUser.email,
+          service: 'metaphor-classifier',
+          content: shareContent,
+          title: title || `Metaphor Classification`,
+          tags: tagsArray,
+          inputText: inputText,
+          results: results,
+          stats: stats,
+          createdAt: serverTimestamp(),
+          likes: 0,
+          views: 0,
+          isPublic: true
+        });
+
+        toast.success("Successfully shared to Public Hub!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing to public hub:", error);
+      toast.error("Failed to share to public hub. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+    }
+  };
+
   const handleInputChange = (e) => {
     setInputText(e.target.value)
   }
@@ -889,6 +975,20 @@ export default function MetaphorClassifier() {
                             <FiCopy className="text-emerald-200 hover:text-emerald-100 text-lg mr-2" />
                           )}
                           <span>{copyStatus ? "Copied All" : "Copy All "}</span>
+                        </button>
+                        <button
+                          className="text-sm bg-gradient-to-r from-green-600/50 to-emerald-600/50 hover:from-green-500/60 hover:to-emerald-500/60 text-green-100 px-4 py-2 rounded-lg flex items-center transition-all duration-300 border border-green-500/30 ml-2"
+                          onClick={() => shareToPublicHub()}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 mr-2"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                          </svg>
+                          <span>Share to Hub</span>
                         </button>
                       </>
                     )}

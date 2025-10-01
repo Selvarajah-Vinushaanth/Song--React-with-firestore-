@@ -26,6 +26,7 @@ export function KeyboardShortcutsProvider({ children }) {
       { key: 's', description: 'Go to Subscription', action: () => navigate('/subscription') },
       { key: 'k', description: 'Go to API Keys', action: () => navigate('/api-keys') },
       { key: 'r', description: 'Refresh Page', action: () => window.location.reload() },
+      { key: 'b', description: 'Go to Public Hub', action: () => navigate('/public-hub') },
       { key: 'o', description: 'Go to Admin Page(Admin access only)', action: () => navigate('/admin') },
       { key: '?', description: 'Show/Hide Keyboard Shortcuts', action: () => setShowShortcutsHelp(prev => !prev) },
     ];

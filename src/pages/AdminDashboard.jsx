@@ -58,6 +58,8 @@ import {
   HardDrive,
   Wifi,
   AlertCircle,
+  Heart,
+  Trash2,
   CheckCircle,
   XCircle,
   TrendingDown,
@@ -66,7 +68,6 @@ import {
   Plus,
   Minus,
   Edit,
-  Trash2,
   Mail,
   Phone,
   MapPin,
@@ -81,6 +82,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 // Register Chart.js components
 ChartJS.register(
@@ -116,7 +118,8 @@ const AdminDashboard = () => {
     apiRequests: [],
     payments: [],
     usageLogs: [],
-    feedback: []
+    feedback: [],
+    publicHub: []
   });
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -265,13 +268,14 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [users, apiKeys, apiRequests, payments, usageLogs, feedback] = await Promise.all([
+      const [users, apiKeys, apiRequests, payments, usageLogs, feedback, publicHub] = await Promise.all([
         fetchUsers(),
         fetchApiKeys(),
         fetchApiRequests(),
         fetchPayments(),
         fetchUsageLogs(),
-        fetchFeedback()
+        fetchFeedback(),
+        fetchPublicHub()
       ]);
 
       setDashboardData({
@@ -280,7 +284,8 @@ const AdminDashboard = () => {
         apiRequests,
         payments,
         usageLogs,
-        feedback
+        feedback,
+        publicHub
       });
 
       calculateStats({
@@ -289,7 +294,8 @@ const AdminDashboard = () => {
         apiRequests,
         payments,
         usageLogs,
-        feedback
+        feedback,
+        publicHub
       });
 
       setLoading(false);
@@ -395,6 +401,25 @@ const AdminDashboard = () => {
       return feedback;
     } catch (error) {
       console.error('Error fetching feedback:', error);
+      return [];
+    }
+  };
+
+  const fetchPublicHub = async () => {
+    try {
+      const publicHubRef = collection(db, 'publicHub');
+      const snapshot = await getDocs(publicHubRef);
+      const publicHub = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort by timestamp (newest first)
+      publicHub.sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return b.createdAt.toDate() - a.createdAt.toDate();
+      });
+      
+      return publicHub;
+    } catch (error) {
+      console.error('Error fetching public hub:', error);
       return [];
     }
   };
@@ -1595,6 +1620,79 @@ const getPaymentPlanData = (range = '7d') => {
       }
     };
 
+    const deleteFeedback = async (feedbackId, feedbackText) => {
+      // Show confirmation dialog
+      const result = await Swal.fire({
+        title: 'Delete Feedback?',
+        text: `Are you sure you want to delete this feedback: "${feedbackText?.substring(0, 50)}..."? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        background: '#1f2937',
+        color: '#ffffff',
+        customClass: {
+          popup: 'backdrop-blur-sm border border-gray-700',
+          title: 'text-white',
+          content: 'text-gray-300',
+          confirmButton: 'bg-red-600 hover:bg-red-700 border-none',
+          cancelButton: 'bg-gray-600 hover:bg-gray-700 border-none'
+        }
+      });
+
+      if (result.isConfirmed) {
+        try {
+          // Show loading toast
+          const loadingToast = toast.loading('Deleting feedback...');
+          
+          await deleteDoc(doc(db, 'feedback', feedbackId));
+          
+          // Dismiss loading toast
+          toast.dismiss(loadingToast);
+          
+          // Refresh data
+          fetchAllData();
+          
+          // Show success message
+          toast.success('Feedback deleted successfully!', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          
+          // Optional: Show SweetAlert success
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Feedback has been deleted successfully.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            background: '#1f2937',
+            color: '#ffffff',
+            customClass: {
+              popup: 'backdrop-blur-sm border border-gray-700'
+            }
+          });
+          
+        } catch (error) {
+          console.error('Error deleting feedback:', error);
+          toast.error('Failed to delete feedback. Please try again.', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+    };
+
     const getServiceColor = (service) => {
       const colors = {
         'lyric-generator': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
@@ -1666,6 +1764,13 @@ const getPaymentPlanData = (range = '7d') => {
                       <option value="reviewed">Reviewed</option>
                       <option value="resolved">Resolved</option>
                     </select>
+                    <button
+                      onClick={() => deleteFeedback(feedback.id, feedback.feedback)}
+                      className="p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
+                      title="Delete feedback"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
                 
@@ -1740,6 +1845,229 @@ const getPaymentPlanData = (range = '7d') => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You don't have permission to access the admin dashboard.</p>
           <p className="text-sm text-gray-500 mt-2">Current user: {currentUser?.email}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const PublicHubManagement = () => {
+    const [selectedService, setSelectedService] = useState('all');
+    const [sortBy, setSortBy] = useState('recent');
+    
+    const filteredContent = dashboardData.publicHub.filter(content => {
+      return selectedService === 'all' || content.service === selectedService;
+    });
+
+    const sortedContent = [...filteredContent].sort((a, b) => {
+      switch (sortBy) {
+        case 'popular':
+          return (b.views || 0) - (a.views || 0);
+        case 'liked':
+          return (b.likes || 0) - (a.likes || 0);
+        default:
+          if (!a.createdAt || !b.createdAt) return 0;
+          return b.createdAt.toDate() - a.createdAt.toDate();
+      }
+    });
+
+    const serviceOptions = [
+      { value: 'all', label: 'All Services' },
+      { value: 'lyric-generator', label: 'Lyric Generator' },
+      { value: 'metaphor-creator', label: 'Metaphor Creator' },
+      { value: 'metaphor-classifier', label: 'Metaphor Classifier' },
+      { value: 'masking-predict', label: 'Masking Predict' }
+    ];
+
+    const sortOptions = [
+      { value: 'recent', label: 'Most Recent' },
+      { value: 'popular', label: 'Most Popular' },
+      { value: 'liked', label: 'Most Liked' }
+    ];
+
+    const deleteContent = async (contentId, contentTitle) => {
+      // Show confirmation dialog
+      const result = await Swal.fire({
+        title: 'Delete Content?',
+        text: `Are you sure you want to delete "${contentTitle || 'this content'}"? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        background: '#1f2937',
+        color: '#ffffff',
+        customClass: {
+          popup: 'backdrop-blur-sm border border-gray-700',
+          title: 'text-white',
+          content: 'text-gray-300',
+          confirmButton: 'bg-red-600 hover:bg-red-700 border-none',
+          cancelButton: 'bg-gray-600 hover:bg-gray-700 border-none'
+        }
+      });
+
+      if (result.isConfirmed) {
+        try {
+          // Show loading toast
+          const loadingToast = toast.loading('Deleting content...');
+          
+          await deleteDoc(doc(db, 'publicHub', contentId));
+          
+          // Dismiss loading toast
+          toast.dismiss(loadingToast);
+          
+          // Refresh data
+          fetchAllData();
+          
+          // Show success message
+          toast.success('Content deleted successfully!', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          
+          // Optional: Show SweetAlert success
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Content has been deleted successfully.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false,
+            background: '#1f2937',
+            color: '#ffffff',
+            customClass: {
+              popup: 'backdrop-blur-sm border border-gray-700'
+            }
+          });
+          
+        } catch (error) {
+          console.error('Error deleting content:', error);
+          toast.error('Failed to delete content. Please try again.', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      }
+    };
+
+    const getServiceColor = (service) => {
+      const colors = {
+        'lyric-generator': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+        'metaphor-creator': 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+        'metaphor-classifier': 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+        'masking-predict': 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+      };
+      return colors[service] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+    };
+
+    return (
+      <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-semibold text-white flex items-center">
+            <Globe className="h-6 w-6 mr-3 text-purple-400" />
+            Public Hub Content Management
+          </h3>
+          <div className="flex items-center space-x-4">
+            <select
+              value={selectedService}
+              onChange={(e) => setSelectedService(e.target.value)}
+              className="bg-gray-800/50 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              {serviceOptions.map(option => (
+                <option key={option.value} value={option.value} className="bg-gray-800">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-gray-800/50 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              {sortOptions.map(option => (
+                <option key={option.value} value={option.value} className="bg-gray-800">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {sortedContent.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Globe className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No public content found</p>
+            </div>
+          ) : (
+            sortedContent.map((content) => (
+              <div key={content.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium border ${getServiceColor(content.service)}`}>
+                        {serviceOptions.find(s => s.value === content.service)?.label || content.service}
+                      </span>
+                      <div className="flex items-center space-x-4 text-sm text-gray-400">
+                        <span className="flex items-center">
+                          <Eye className="h-4 w-4 mr-1" />
+                          {content.views || 0}
+                        </span>
+                        <span className="flex items-center">
+                          <Heart className="h-4 w-4 mr-1" />
+                          {content.likes || 0}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <h4 className="text-white font-medium mb-2">{content.title}</h4>
+                    <p className="text-gray-300 text-sm mb-2 line-clamp-2">{content.content}</p>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>By: {content.userName}</span>
+                      <span>{content.createdAt?.toDate?.()?.toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => deleteContent(content.id, content.title)}
+                    className="ml-4 p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="Delete content"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        
+        <div className="mt-4 p-4 bg-gray-800/30 rounded-lg border border-gray-700/30">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-purple-400">{dashboardData.publicHub.length}</div>
+              <div className="text-sm text-gray-400">Total Content</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-400">
+                {dashboardData.publicHub.reduce((sum, item) => sum + (item.views || 0), 0)}
+              </div>
+              <div className="text-sm text-gray-400">Total Views</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-pink-400">
+                {dashboardData.publicHub.reduce((sum, item) => sum + (item.likes || 0), 0)}
+              </div>
+              <div className="text-sm text-gray-400">Total Likes</div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1857,6 +2185,7 @@ const getPaymentPlanData = (range = '7d') => {
                 { id: 'analytics', label: 'Analytics', icon: TrendingUp },
                 { id: 'users', label: 'Users', icon: Users },
                 { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+                { id: 'public-hub', label: 'Public Hub', icon: Globe },
                 { id: 'system', label: 'System', icon: Server }
               ].map((tab) => (
                 <button
@@ -2217,6 +2546,12 @@ const getPaymentPlanData = (range = '7d') => {
           {activeTab === 'feedback' && (
             <div className="space-y-8">
               <FeedbackManagement />
+            </div>
+          )}
+
+          {activeTab === 'public-hub' && (
+            <div className="space-y-8">
+              <PublicHubManagement />
             </div>
           )}
 
