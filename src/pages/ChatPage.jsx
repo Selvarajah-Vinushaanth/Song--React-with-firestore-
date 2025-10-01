@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from "lucide-react";
 import axios from 'axios'; // You'll need to install axios: npm install axios
-
+import { useAuth } from '../context/AuthContext'
 export default function ChatPage() {
    const textareaRef = useRef(null);
   const [messages, setMessages] = useState([
@@ -11,6 +11,7 @@ export default function ChatPage() {
       content: 'Welcome to Tamil AI Chat. You can use this interface to interact with our Metaphor Classifier, Lyric Generator, Metaphor Creator, and Masking Predict services. How can I help you today?'
     }
   ]);
+  const { currentUser } = useAuth()
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState('auto');
@@ -41,8 +42,8 @@ export default function ChatPage() {
   // New states for metaphor creator options
   const [showMetaphorOptions, setShowMetaphorOptions] = useState(false);
   const [metaphorSource, setMetaphorSource] = useState("");
-  const [metaphorTarget, setMetaphorTarget] = useState("general");
-  const [metaphorEmotion, setMetaphorEmotion] = useState("positive");
+  const [metaphorTarget, setMetaphorTarget] = useState("");
+  const [metaphorContext, setMetaphorContext] = useState("");
   
   // New states for lyric generator options
   const [showLyricOptions, setShowLyricOptions] = useState(false);
@@ -79,27 +80,28 @@ export default function ChatPage() {
   };
   // Mock examples for each service
   const examples = {
-    'metaphor-classifier': [
-      'Identify metaphors in "வானம் கண்ணீர் சிந்துகிறது"',
-      'Analyze the metaphors in this poem: "இரவின் இதயம் துடிக்கிறது"',
-      'Is "அவனது வார்த்தைகள் தேனாக இனித்தன" metaphorical?'
-    ],
-    'lyric-generator': [
-      'Generate a song emotion: calm seed: "Under the moonlight we danced"',
-      'Write a lyric emotion: happy seed: "Your smile outshines the morning sun"',
-      'Create a sad song emotion: sad seed: "Memories fade like autumn leaves"'
-    ],
-    'metaphor-creator': [
-      'Create a metaphor source: love target: ocean emotion: positive',
-      'Make a metaphor source: life target: river emotion: neutral',
-      'Generate a metaphor about knowledge and light emotion: positive'
-    ],
-    'masking-predict': [
-      'Predict words for "I [mask] to school every day"',
-      'Fill in "நான் [mask] வீட்டிற்கு செல்கிறேன்"',
-      'Complete "She [mask] the book carefully"'
-    ]
-  };
+  'metaphor-classifier': [
+    'Instruction: Identify if the following sentence contains a metaphor. Example: "வானம் கண்ணீர் சிந்துகிறது"',
+    'Instruction: Analyze the metaphors in this poem. Example: "இரவின் இதயம் துடிக்கிறது"',
+    'Instruction: Determine if this sentence is metaphorical. Example: "அவனது வார்த்தைகள் தேனாக இனித்தன"'
+  ],
+  'lyric-generator': [
+    'Instruction: Generate a song lyric based on the given seed. Example seed: "நான் உங்கள் அன்புக்கு வருகிறேன்"',
+    'Instruction: Write a lyric expressing an emotion. Example seed: "உங்கள் சிரிப்பு காலைசூரியனை மீறுகிறது"',
+    'Instruction: Create a sad song using the given seed. Example seed: "நினைவுகள் பொழுதுபோல நீங்குகின்றன"'
+  ],
+  'metaphor-creator': [
+    'Instruction: Create a metaphor with source and target concepts. Example: source: அன்பு, target: கடல், context: காதல்',
+    'Instruction: Make a metaphor about life and a river. Example: source: வாழ்க்கை, target: நதி, context: பயணம்',
+    'Instruction: Generate a metaphor involving knowledge and light. Example: source: அறிவு, target: ஒளி, context: அறிவுத்திறன்'
+  ],
+  'masking-predict': [
+    'Instruction: Predict the missing word in the sentence. Example: "நான் [mask] பள்ளிக்கு போகிறேன்"',
+    'Instruction: Fill in the masked word. Example: "அவள் [mask] புத்தகத்தை கவனமாக படித்தாள்"',
+    'Instruction: Complete the masked word in the sentence. Example: "அவன் [mask] பாட்டு பாடினான்"'
+  ]
+};
+
 
   // Scroll to bottom of chat when messages update
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function ChatPage() {
     // Reset input if model changes
     if (selectedModel === 'metaphor-creator') {
       if (metaphorSource) {
-        setInput(`Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorEmotion}`);
+        setInput(`Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorContext}`);
       }
     } else if (selectedModel === 'lyric-generator') {
       if (lyricSeed) {
@@ -131,7 +133,7 @@ export default function ChatPage() {
         setInput(`Predict words for "${maskText}"`);
       }
     }
-  }, [selectedModel, metaphorSource, metaphorTarget, metaphorEmotion, lyricEmotion, lyricSeed, maskText]);
+  }, [selectedModel, metaphorSource, metaphorTarget, metaphorContext, lyricEmotion, lyricSeed, maskText]);
 const exportChat = (type = 'txt') => {
   const chatContent = document.querySelector("#chat-container")?.innerText;
   if (!chatContent) return;
@@ -228,7 +230,7 @@ const exportChat = (type = 'txt') => {
           className={`${
             lyricEmotion === motion.value
               ? 'bg-green-600 text-white border-green-500'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600'
+              : 'black-700 text-gray-300 hover:black-600 border-gray-600'
           } rounded-lg p-2 transition-all border text-xs`}
           onClick={() => setLyricEmotion(motion.value)}
         >
@@ -267,7 +269,7 @@ const exportChat = (type = 'txt') => {
       try {
         // Parallel API requests for each line
         const promises = lines.map(sentence =>
-          axios.post(API_ENDPOINTS['metaphor-classifier'], { text: sentence })
+          axios.post(API_ENDPOINTS['metaphor-classifier'], { text: sentence,userId:currentUser.uid })
             .then(response => {
               if (response.data.results) {
                 return response.data.results[0];
@@ -342,7 +344,8 @@ const exportChat = (type = 'txt') => {
       if (service === 'metaphor-classifier') {
         // Metaphor Classifier POST request
         const response = await axios.post(API_ENDPOINTS['metaphor-classifier'], {
-          text: input
+          text: input,
+          userId:currentUser.uid
         }, {
           headers: {
             'Content-Type': 'application/json'
@@ -362,6 +365,7 @@ const exportChat = (type = 'txt') => {
         // Use values from the selection UI if available
         let emotion = lyricEmotion;
         let seed = lyricSeed;
+        
         
         // If no emotion is selected, parse from the input
         if (!emotion) {
@@ -411,7 +415,8 @@ const exportChat = (type = 'txt') => {
         console.log(`Sending lyric request - Emotion: ${emotion}, Seed: ${seed}`);
         const response = await axios.post(API_ENDPOINTS['lyric-generator'], {
           motion: emotion,
-          seed: seed
+          seed: seed,
+          userId:currentUser.uid
         }, {
           headers: {
             'Content-Type': 'application/json'
@@ -461,7 +466,7 @@ const exportChat = (type = 'txt') => {
         // Use values from the selection UI if available
         let source = metaphorSource;
         let target = metaphorTarget;
-        let emotion = metaphorEmotion;
+        let context = metaphorContext;
         
         // If no source is selected, parse from the input
         if (!source) {
@@ -486,7 +491,7 @@ const exportChat = (type = 'txt') => {
           if (inputText.includes("emotion:")) {
             const match = inputText.match(/emotion:\s*(\w+)/i);
             if (match && match[1]) {
-              emotion = match[1].toLowerCase();
+              context = match[1].toLowerCase();
             }
           }
           
@@ -534,7 +539,8 @@ const exportChat = (type = 'txt') => {
         const response = await axios.post(API_ENDPOINTS['metaphor-creator'], {
           source: source,
           target: target,
-          emotion: emotion
+          Context: context,
+          userId:currentUser.uid
         }, {
           headers: {
             'Content-Type': 'application/json'
@@ -545,7 +551,7 @@ const exportChat = (type = 'txt') => {
         if (response.data && response.data.metaphors && response.data.metaphors.length > 0) {
           // Join multiple metaphors with line breaks, each metaphor on its own line
           const metaphorsText = response.data.metaphors.map(m => `"${m}"`).join('\n\n');
-          responseContent = `**Created Metaphor**\n\nHere ${response.data.metaphors.length > 1 ? 'are some' : 'is a'} beautiful metaphor${response.data.metaphors.length > 1 ? 's' : ''} about "${source}"${target !== "general" ? ` related to "${target}"` : ''} with ${emotion} emotion:\n\n${metaphorsText}\n\nThese metaphors connect the concepts in a creative way that enhances understanding and emotional impact.`;
+          responseContent = `**Created Metaphor**\n\nHere ${response.data.metaphors.length > 1 ? 'are some' : 'is a'} beautiful metaphor${response.data.metaphors.length > 1 ? 's' : ''} about "${source}"${target !== "general" ? ` related to "${target}"` : ''} with ${context} context:\n\n${metaphorsText}\n\nThese metaphors connect the concepts in a creative way that enhances understanding and emotional impact.`;
         } else {
           // Fallback with some beautiful predefined metaphors
           const fallbackMetaphors = [
@@ -557,7 +563,7 @@ const exportChat = (type = 'txt') => {
           ];
           
           const metaphorsText = fallbackMetaphors.join('\n\n');
-          responseContent = `**Created Metaphor**\n\nHere are some beautiful metaphors about "${source}"${target !== "general" ? ` related to "${target}"` : ''} with ${emotion} emotion:\n\n${metaphorsText}\n\nThese metaphors connect the concepts in a creative way that enhances understanding and emotional impact.`;
+          responseContent = `**Created Metaphor**\n\nHere are some beautiful metaphors about "${source}"${target !== "general" ? ` related to "${target}"` : ''} with context: ${context}\n\n${metaphorsText}\n\nThese metaphors connect the concepts in a creative way that enhances understanding and emotional impact.`;
         }
       } else if (service === 'masking-predict') {
         // Extract the sentence with [mask] token
@@ -580,7 +586,8 @@ const exportChat = (type = 'txt') => {
         // Masking Predict POST request
         const response = await axios.post(API_ENDPOINTS['masking-predict'], {
           text: sentence,
-          top_k: 5
+          top_k: 5,
+          userId:currentUser.uid
         }, {
           headers: {
             'Content-Type': 'application/json'
@@ -728,23 +735,24 @@ const copyLyric = (text) => {
           .map((lyric, index) => {
             const cleanLyric = lyric.replace(/\*\*(.*?)\*\*/g, '<strong class="text-green-300">$1</strong>');
             return `
-              <div class="lyric-line bg-gray-700/30 rounded-lg p-4 mb-3 border-l-4 border-green-400 hover:bg-gray-700/50 transition-all group">
-                <div class="flex items-start justify-between">
-                  <div class="flex-grow text-gray-100 leading-relaxed font-tamil text-lg">
-                    ${cleanLyric}
-                  </div>
-                  <button 
-                    class="ml-3 p-2 text-gray-400 hover:text-white bg-gray-600/50 hover:bg-gray-600 rounded-md opacity-0 group-hover:opacity-100 transition-all copy-lyric-btn" 
-                    onclick="copyLyric(event, '${encodeURIComponent(lyric.replace(/\*\*(.*?)\*\*/g, '$1'))}')"
-                    title="Copy this lyric"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            `;
+  <div class="lyric-line bg-black rounded-lg p-4 mb-3 border-l-4 border-green-400 hover:bg-black/80 transition-all group">
+    <div class="flex items-start justify-between">
+      <div class="flex-grow text-gray-100 leading-relaxed font-tamil text-lg">
+        ${cleanLyric}
+      </div>
+      <button 
+        class="ml-3 p-2 text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-md opacity-0 group-hover:opacity-100 transition-all copy-lyric-btn" 
+        onclick="copyLyric(event, '${encodeURIComponent(lyric.replace(/\*\*(.*?)\*\*/g, '$1'))}')"
+        title="Copy this lyric"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+`;
+
           }).join('');
         
         // Format footer
@@ -914,20 +922,21 @@ const copyLyric = (text) => {
         
         // Create HTML with copy buttons for each metaphor
        const metaphorsWithButtons = metaphors.map((m, i) => {
-  return `
-    <div class="flex items-start my-2 group">
-      <div class="flex-grow metaphor-text">${m}</div>
-      <button 
-        class="ml-2 p-1 text-green-100 hover:text-white bg-green-700 hover:bg-green-600 rounded opacity-0 group-hover:opacity-100 transition-opacity copy-btn" 
-        data-metaphor="${encodeURIComponent(m)}"
-        onclick="window.copyMetaphor(event, '${encodeURIComponent(m)}')"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
-      </button>
-    </div>
-  `;
+ return `
+  <div class="flex items-start my-2 group bg-black rounded-lg p-3 border-l-4 border-green-400 hover:bg-black/80 transition-colors">
+    <div class="flex-grow metaphor-text text-gray-100">${m}</div>
+    <button 
+      class="ml-2 p-1 text-green-100 hover:text-white bg-green-700 hover:bg-green-600 rounded opacity-0 group-hover:opacity-100 transition-opacity copy-btn" 
+      data-metaphor="${encodeURIComponent(m)}"
+      onclick="window.copyMetaphor(event, '${encodeURIComponent(m)}')"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    </button>
+  </div>
+`;
+
 }
 ).join('');
         
@@ -1099,7 +1108,7 @@ window.copyPrediction = (event, text) => {
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 to-black">
       {/* Header */}
-      <header className="bg-gray-900/80 backdrop-blur-xl py-4 px-6 border-b border-gray-800 flex justify-between items-center sticky top-0 z-10 shadow-lg">
+      <header className="black-900/80 backdrop-blur-xl py-4 px-6 border-b border-gray-800 flex justify-between items-center sticky top-0 z-10 shadow-lg">
   <Link to="/" className="flex items-center space-x-3 group">
     <div className="h-9 w-9 bg-gradient-to-br from-green-500 to-teal-400 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
       <span className="text-white font-bold">T</span>
@@ -1608,7 +1617,7 @@ window.copyPrediction = (event, text) => {
             
             {/* Batch Results for multi-line metaphor-classifier */}
             {batchResults && (
-              <div className="bg-gray-900/80 rounded-2xl p-6 shadow-lg border border-gray-700 mt-4">
+              <div className="black-900/80 rounded-2xl p-6 shadow-lg max-w-5xl border border-gray-700 mt-4">
                 <div className="flex items-center mb-4">
                   <span className="text-green-400 text-lg font-bold mr-2">🎭</span>
                   <span className="font-semibold text-white">Batch Metaphor Analysis</span>
@@ -1626,7 +1635,7 @@ window.copyPrediction = (event, text) => {
                     {/* Pagination controls */}
                     <div className="flex justify-end items-center mb-2 gap-2">
                       <button
-                        className="px-2 py-1 rounded bg-gray-700 text-gray-300 disabled:opacity-50"
+                        className="px-2 py-1 rounded black-700 text-gray-300 disabled:opacity-50"
                         disabled={batchPage <= 1}
                         onClick={() => setBatchPage(batchPage - 1)}
                       >◀</button>
@@ -1634,7 +1643,7 @@ window.copyPrediction = (event, text) => {
                         Page {batchPage} of {Math.ceil(batchResults.length / batchPageSize)}
                       </span>
                       <button
-                        className="px-2 py-1 rounded bg-gray-700 text-gray-300 disabled:opacity-50"
+                        className="px-2 py-1 rounded black-700 text-gray-300 disabled:opacity-50"
                         disabled={batchPage >= Math.ceil(batchResults.length / batchPageSize)}
                         onClick={() => setBatchPage(batchPage + 1)}
                       >▶</button>
@@ -1648,7 +1657,7 @@ window.copyPrediction = (event, text) => {
   className={`rounded-lg px-4 py-2 flex items-center gap-3 ${
     res.isMetaphor
       ? 'bg-green-500/10 border-l-4 border-green-400'
-      : 'bg-gray-700/50 border-l-4 border-gray-500'
+      : 'black-700/50 border-l-4 border-gray-500'
   }`}
 >
   <span className={`font-bold ${res.isMetaphor ? 'text-green-400' : 'text-gray-300'}`}>
@@ -1684,7 +1693,7 @@ window.copyPrediction = (event, text) => {
                   </div>
                 </div>
                 {/* Dashboard Section */}
-                <div className="mt-8 bg-gray-800/80 rounded-xl p-6 border border-gray-700">
+                <div className="mt-8 black-800/80 rounded-xl p-6 border border-gray-700">
                   <h3 className="text-lg font-bold text-white mb-4">Dashboard & Explanatory Analysis</h3>
                   <div className="flex flex-wrap gap-8 items-start">
                     {/* Pie Chart */}
@@ -1695,7 +1704,7 @@ window.copyPrediction = (event, text) => {
                     {/* Explanatory Table */}
                     <div className="flex-1">
                       <div className="text-xs text-gray-400 mb-2">Explanatory Table</div>
-                      <table className="min-w-full text-left text-gray-200 text-sm bg-gray-900/80 rounded-xl overflow-hidden">
+                      <table className="min-w-full text-left text-gray-200 text-sm black-900/80 rounded-xl overflow-hidden">
                         <tbody>
                           <tr className="border-b border-gray-700">
                             <td className="px-4 py-2">Total Lines</td>
@@ -1730,7 +1739,7 @@ window.copyPrediction = (event, text) => {
                 <div className="h-9 w-9 rounded-full bg-gradient-to-br from-green-500 to-teal-400 flex-shrink-0 flex items-center justify-center mr-3 shadow-lg">
                   <span className="text-white font-bold">AI</span>
                 </div>
-                <div className="max-w-full rounded-2xl px-5 py-4 bg-gray-800/80 backdrop-blur-sm text-white border border-gray-700 shadow-lg">
+                <div className="max-w-full rounded-2xl px-5 py-4 black-800/80 backdrop-blur-sm text-white border border-gray-700 shadow-lg">
                   <div className="flex space-x-2 items-center">
                     <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
                     <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
@@ -1767,50 +1776,49 @@ window.copyPrediction = (event, text) => {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex flex-col">
-                      <label className="text-sm text-gray-300 mb-2">Source Concept</label>
-                      <input 
-                        type="text" 
-                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                        placeholder="e.g., love, knowledge, time"
-                        value={metaphorSource}
-                        onChange={(e) => setMetaphorSource(e.target.value)}
-                      />
-                      <p className="text-xs text-gray-500 mt-1 italic">What you want to describe</p>
-                    </div>
-                    
-                    <div className="flex flex-col">
-                      <label className="text-sm text-gray-300 mb-2">Target Domain</label>
-                      <input 
-                        type="text" 
-                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                        placeholder="e.g., ocean, fire, journey"
-                        value={metaphorTarget}
-                        onChange={(e) => setMetaphorTarget(e.target.value)}
-                      />
-                      <p className="text-xs text-gray-500 mt-1 italic">Compare it to</p>
-                    </div>
-                    
-                    <div className="flex flex-col">
-                      <label className="text-sm text-gray-300 mb-2">Emotion</label>
-                      <select
-                        className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                        value={metaphorEmotion}
-                        onChange={(e) => setMetaphorEmotion(e.target.value)}
-                      >
-                        <option value="positive">✨ Positive</option>
-                        <option value="negative">🌧️ Negative</option>
-                        <option value="neutral">⚖️ Neutral</option>
-                      </select>
-                      <p className="text-xs text-gray-500 mt-1 italic">Emotional tone</p>
-                    </div>
-                  </div>
+  <div className="flex flex-col">
+    <label className="text-sm text-gray-300 mb-2">Source Concept</label>
+    <input 
+      type="text" 
+      className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+      placeholder="e.g. பறவை, நதி, தேன்"
+      value={metaphorSource}
+      onChange={(e) => setMetaphorSource(e.target.value)}
+    />
+    <p className="text-xs text-gray-500 mt-1 italic">What you want to describe</p>
+  </div>
+  
+  <div className="flex flex-col">
+    <label className="text-sm text-gray-300 mb-2">Target Domain</label>
+    <input 
+      type="text" 
+      className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+      placeholder="e.g. ஆவல், நினைவுகள், பாசம்"
+      value={metaphorTarget}
+      onChange={(e) => setMetaphorTarget(e.target.value)}
+    />
+    <p className="text-xs text-gray-500 mt-1 italic">Compare it to</p>
+  </div>
+  
+  <div className="flex flex-col">
+    <label className="text-sm text-gray-300 mb-2">Context</label>
+    <input 
+      type="text" 
+      className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+      placeholder="e.g. சுதந்திரம், ஓட்டம், இனிமை"
+      value={metaphorContext}
+      onChange={(e) => setMetaphorContext(e.target.value)}
+    />
+    <p className="text-xs text-gray-500 mt-1 italic">mood/style</p>
+  </div>
+</div>
+
 
                   {/* Generate Button */}
                   <div className="mt-4 text-center">
                     <button
   onClick={() => {
-    const message = `Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} emotion: ${metaphorEmotion}`;
+    const message = `Create a metaphor source: ${metaphorSource} target: ${metaphorTarget} context: ${metaphorContext}`;
     setInput(message);
     setShowMetaphorOptionsPanel(false);
   }}
@@ -1858,7 +1866,7 @@ window.copyPrediction = (event, text) => {
                     className={`${
                       lyricEmotion === motion.value
                         ? 'bg-green-600 text-white border-green-500'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-gray-600'
+                        : 'black-700 text-gray-300 hover:bg-gray-600 border-gray-600'
                     } rounded-lg p-2 transition-all border text-xs`}
                     onClick={() => setLyricEmotion(motion.value)}
                   >
@@ -1877,7 +1885,7 @@ window.copyPrediction = (event, text) => {
               <label className="text-sm text-gray-300 mb-2">Initial Sentence (Optional)</label>
               <textarea
                 className="w-full bg-gray-800 text-white rounded-xl border border-gray-600 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition text-sm"
-                placeholder="Enter an initial sentence..."
+                placeholder="Enter an initial sentence... e.g. கண் விழிகள் தேன் நதியாக ஏர்கின்றன"
                 rows="4"
                 value={lyricSeed}
                 onChange={(e) => setLyricSeed(e.target.value)}

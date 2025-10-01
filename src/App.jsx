@@ -14,7 +14,7 @@ import MetaphorClassifier from './pages/MetaphorClassifier';
 import LyricGenerator from './pages/LyricGenerator';
 import MetaphorCreator from './pages/MetaphorCreator';
 import ChatPage from './pages/ChatPage'; // Use the regular chat page
-import ChatPageNew from './pages/ChatPageNew'; // Use the new chat page
+// import ChatPageNew from './pages/ChatPageNew'; // Use the new chat page
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -99,7 +99,7 @@ function App() {
                   path="/chat" 
                   element={
                     <PrivateRoute>
-                      <ChatPageNew />
+                      <ChatPage />
                     </PrivateRoute>
                   } 
                 />

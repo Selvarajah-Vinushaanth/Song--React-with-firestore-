@@ -696,93 +696,104 @@ const AdminDashboard = () => {
 };
 
 
-  const getServiceUsageData = () => {
-    try {
-      const serviceCounts = {};
-      const serviceColors = {
-  'metaphor-classifier': 'rgba(139, 92, 246, 0.8)',  // purple
-  'lyric-generator': 'rgba(59, 130, 246, 0.8)',      // blue
-  'metaphor-creator': 'rgba(236, 72, 153, 0.8)',     // pink
-  'masking-predict': 'rgba(34, 197, 94, 0.8)',       // green
-  'chat': 'rgba(245, 158, 11, 0.8)',                 // amber
-  'new-service-1': 'rgba(239, 68, 68, 0.8)',         // red
-  'new-service-2': 'rgba(20, 184, 166, 0.8)',        // teal
-  'new-service-3': 'rgba(168, 85, 247, 0.8)',        // violet
-  'default': 'rgba(156, 163, 175, 0.8)'              // gray
+  const getServiceUsageData = (range = "7d") => {
+  try {
+    const serviceCounts = {};
+    const serviceColors = {
+      'metaphor-classifier': 'rgba(139, 92, 246, 0.8)',  // purple
+      'lyric-generator': 'rgba(59, 130, 246, 0.8)',      // blue
+      'metaphor-creator': 'rgba(236, 72, 153, 0.8)',     // pink
+      'masking-predict': 'rgba(34, 197, 94, 0.8)',       // green
+      'chat': 'rgba(245, 158, 11, 0.8)',                 // amber
+      'new-service-1': 'rgba(239, 68, 68, 0.8)',         // red
+      'new-service-2': 'rgba(20, 184, 166, 0.8)',        // teal
+      'new-service-3': 'rgba(168, 85, 247, 0.8)',        // violet
+      'default': 'rgba(156, 163, 175, 0.8)'              // gray
+    };
+
+    const now = new Date();
+    let startDate = new Date();
+
+    if (range === "7d") startDate.setDate(now.getDate() - 6);
+    else if (range === "30d") startDate.setDate(now.getDate() - 29);
+    else if (range === "3m") startDate.setMonth(now.getMonth() - 2);
+
+    dashboardData.apiRequests?.forEach(request => {
+      const timestamp = request.timestamp?.toDate ? request.timestamp.toDate() : new Date(request.timestamp);
+      if (!timestamp || timestamp < startDate) return; // skip outside range
+
+      const service = request.service || request.endpoint || 'unknown';
+      serviceCounts[service] = (serviceCounts[service] || 0) + 1;
+    });
+
+    const labels = Object.keys(serviceCounts).length ? Object.keys(serviceCounts) : ['No Data'];
+    const data = Object.values(serviceCounts).length ? Object.values(serviceCounts) : [1];
+    const backgroundColor = labels.map(service => serviceColors[service] || serviceColors.default);
+
+    return {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor,
+        borderColor: backgroundColor.map(color => color.replace('0.8', '1')),
+        borderWidth: 2
+      }]
+    };
+  } catch (error) {
+    console.error("Error generating service usage data:", error);
+    return {
+      labels: ['Error'],
+      datasets: [{
+        data: [1],
+        backgroundColor: ['rgba(239, 68, 68, 0.8)'],
+        borderColor: ['rgba(239, 68, 68, 1)'],
+        borderWidth: 2
+      }]
+    };
+  }
 };
 
 
-      if (dashboardData.apiRequests && dashboardData.apiRequests.length > 0) {
-        dashboardData.apiRequests.forEach(request => {
-          const service = request.service || request.endpoint || 'unknown';
-          serviceCounts[service] = (serviceCounts[service] || 0) + 1;
-        });
+  const getHourlyRequestsData = (range = "7d") => {
+  try {
+    const hourlyData = Array(24).fill(0);
+    const now = new Date();
+    let startDate = new Date();
+
+    // Determine start date based on range
+    if (range === "7d") startDate.setDate(now.getDate() - 6);
+    else if (range === "30d") startDate.setDate(now.getDate() - 29);
+    else if (range === "3m") startDate.setMonth(now.getMonth() - 2);
+
+    dashboardData.apiRequests?.forEach(request => {
+      try {
+        const timestamp = request.timestamp?.toDate ? request.timestamp.toDate() : new Date(request.timestamp);
+        if (!timestamp || timestamp < startDate) return; // skip outside range
+        const hour = timestamp.getHours();
+        hourlyData[hour]++;
+      } catch (error) {
+        console.warn('Could not parse request timestamp:', request.timestamp);
       }
+    });
 
-      const labels = Object.keys(serviceCounts);
-      const data = Object.values(serviceCounts);
-      const backgroundColor = labels.map(service => serviceColors[service] || serviceColors.default);
+    return {
+      labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+      datasets: [{
+        label: 'Requests per Hour',
+        data: hourlyData,
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4
+      }]
+    };
+  } catch (error) {
+    console.error('Error generating hourly requests data:', error);
+    return { labels: [], datasets: [] };
+  }
+};
 
-      return {
-        labels: labels.length > 0 ? labels : ['No Data'],
-        datasets: [{
-          data: data.length > 0 ? data : [1],
-          backgroundColor: backgroundColor.length > 0 ? backgroundColor : [serviceColors.default],
-          borderColor: backgroundColor.map(color => color.replace('0.8', '1')),
-          borderWidth: 2
-        }]
-      };
-    } catch (error) {
-      console.error('Error generating service usage data:', error);
-      return {
-        labels: ['Error'],
-        datasets: [{
-          data: [1],
-          backgroundColor: ['rgba(239, 68, 68, 0.8)'],
-          borderColor: ['rgba(239, 68, 68, 1)'],
-          borderWidth: 2
-        }]
-      };
-    }
-  };
-
-  const getHourlyRequestsData = () => {
-    try {
-      const hourlyData = Array(24).fill(0);
-      
-      if (dashboardData.apiRequests) {
-        dashboardData.apiRequests.forEach(request => {
-          try {
-            if (request.timestamp) {
-              const hour = request.timestamp.toDate().getHours();
-              hourlyData[hour]++;
-            }
-          } catch (error) {
-            console.warn('Could not parse request timestamp:', request.timestamp);
-          }
-        });
-      }
-
-      return {
-        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
-        datasets: [{
-          label: 'Requests per Hour',
-          data: hourlyData,
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderColor: 'rgba(59, 130, 246, 1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4
-        }]
-      };
-    } catch (error) {
-      console.error('Error generating hourly requests data:', error);
-      return {
-        labels: [],
-        datasets: []
-      };
-    }
-  };
 
 const getRevenueTrendData = (range = "3m") => {
   try {
@@ -1794,7 +1805,7 @@ const getPaymentPlanData = (range = '7d') => {
                   </h3>
                   <div style={{ height: '250px', maxHeight: '250px' }}>
                     <Pie
-                      data={getServiceUsageData()}
+                      data={getServiceUsageData(timeRange)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,
@@ -1817,7 +1828,7 @@ const getPaymentPlanData = (range = '7d') => {
                   </h3>
                   <div style={{ height: '250px', maxHeight: '250px' }}>
                     <Line
-                      data={getHourlyRequestsData()}
+                      data={getHourlyRequestsData(timeRange)}
                       options={{
                         responsive: true,
                         maintainAspectRatio: false,

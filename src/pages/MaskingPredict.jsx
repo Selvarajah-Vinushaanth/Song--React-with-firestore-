@@ -120,20 +120,20 @@ export default function MaskingPredict() {
       console.log("Current history size:", querySnapshot.size)
       
       // If we have 5 or more entries, delete the oldest ones
-      if (querySnapshot.size >= 5) {
-        const batch = writeBatch(db)
-        const docsToDelete = []
-        querySnapshot.forEach((doc) => {
-          docsToDelete.push(doc)
-        })
+      // if (querySnapshot.size >= 5) {
+      //   const batch = writeBatch(db)
+      //   const docsToDelete = []
+      //   querySnapshot.forEach((doc) => {
+      //     docsToDelete.push(doc)
+      //   })
         
-        // Delete all but the 4 most recent (so we can add 1 new one)
-        for (let i = 4; i < docsToDelete.length; i++) {
-          batch.delete(docsToDelete[i].ref)
-        }
-        await batch.commit()
-        console.log("Deleted old entries")
-      }
+      //   // Delete all but the 4 most recent (so we can add 1 new one)
+      //   for (let i = 4; i < docsToDelete.length; i++) {
+      //     batch.delete(docsToDelete[i].ref)
+      //   }
+      //   await batch.commit()
+      //   console.log("Deleted old entries")
+      // }
       
       // Prepare data for Firestore (handle both single and multiple mask scenarios)
       let dataToSave = {
