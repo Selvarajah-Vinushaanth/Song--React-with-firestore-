@@ -47,6 +47,7 @@ export default function MetaphorCreator() {
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState("history")
   const [count, setCount] = useState(2) // Add count state
+  const [feedback, setFeedback] = useState("") // Add feedback state
 
   // Firestore functions for metaphor history
   const fetchMetaphorHistory = async () => {
@@ -336,6 +337,33 @@ export default function MetaphorCreator() {
     navigator.clipboard.writeText(textToCopy)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const submitFeedback = (feedback) => {
+    if (!feedback.trim()) {
+      toast.error("Please enter your feedback before submitting.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+      return
+    }
+
+    console.log("Metaphor Creator Feedback submitted:", feedback)
+    toast.success("Thank you for your feedback!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    })
+    setFeedback("") // Clear feedback after submission
   }
 
   const toggleFavorite = async (m) => {
@@ -1039,6 +1067,35 @@ export default function MetaphorCreator() {
             <div className="mt-2 text-center">
               <strong>Quick contexts:</strong> கவிதை | காதல் | தத்துவம் | நகைச்சுவை | சுதந்திரம் | இன்பம்
             </div>
+          </div>
+
+          {/* Feedback Section */}
+          <div className="bg-gradient-to-br from-slate-800/70 via-pink-950/30 to-rose-950/50 backdrop-blur-xl border border-pink-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-pink-500/20 mt-8">
+            <h2 className="text-xl font-bold mb-6 text-pink-100 flex items-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mr-3 shadow-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M18 13a1 1 0 01-1 1H5.414l2.293 2.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 12H17a1 1 0 011 1z" />
+                </svg>
+              </div>
+              Feedback
+            </h2>
+            <textarea
+              className="w-full bg-slate-800/70 border border-pink-600/30 text-pink-50 rounded-xl p-4 text-sm shadow-inner backdrop-blur-sm placeholder-pink-300/50 focus:ring-2 focus:ring-pink-500 focus:border-pink-400 transition-all duration-300 h-32 resize-none"
+              placeholder="Share your feedback about the metaphor creation..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+            />
+            <button
+              className="mt-4 bg-gradient-to-r from-pink-600 to-rose-700 hover:from-pink-500 hover:to-rose-600 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-pink-500/30 flex items-center justify-center font-medium text-lg hover:scale-105 transform w-full"
+              onClick={() => submitFeedback(feedback)}
+            >
+              Submit Feedback
+            </button>
           </div>
         </div>
       </div>

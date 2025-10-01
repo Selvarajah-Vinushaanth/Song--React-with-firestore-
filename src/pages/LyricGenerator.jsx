@@ -40,6 +40,7 @@ export default function LyricGenerator() {
   const [viewMode, setViewMode] = useState("cards") // 'cards', 'list', or 'focus'
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [count, setCount] = useState(3) // Add count state with default value
+  const [feedback, setFeedback] = useState("") // Add feedback state
 
   // Remove local moodUsage state - we'll calculate from Firestore data
 
@@ -309,6 +310,33 @@ export default function LyricGenerator() {
     navigator.clipboard.writeText(textToCopy)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const submitFeedback = (feedback) => {
+    if (!feedback.trim()) {
+      toast.error("Please enter your feedback before submitting.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+      return
+    }
+
+    console.log("Lyric Generator Feedback submitted:", feedback)
+    toast.success("Thank you for your feedback!", {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    })
+    setFeedback("") // Clear feedback after submission
   }
 
   const handleViewModeChange = (mode) => {
@@ -1283,7 +1311,39 @@ export default function LyricGenerator() {
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/10 to-indigo-900/10 rounded-xl text-center border border-blue-500/20">
             <p className="text-xs text-blue-300 font-medium">💡 Click any example to use it as your starting point!</p>
           </div>
+      
+          {/* Feedback Section */}
+          <div className="bg-gradient-to-br from-slate-800/70 via-blue-950/30 to-indigo-950/50 backdrop-blur-xl border border-blue-700/30 rounded-2xl shadow-2xl p-6 transition-all duration-300 hover:shadow-blue-500/20 mt-8">
+            <h2 className="text-xl font-bold mb-6 text-blue-100 flex items-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-white"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M18 13a1 1 0 01-1 1H5.414l2.293 2.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 12H17a1 1 0 011 1z" />
+                </svg>
+              </div>
+              Feedback
+            </h2>
+            <textarea
+              className="w-full bg-slate-800/70 border border-blue-600/30 text-blue-50 rounded-xl p-4 text-sm shadow-inner backdrop-blur-sm placeholder-blue-300/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 h-32 resize-none"
+              placeholder="Share your feedback about the lyric generation..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+            />
+            <button
+              className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-blue-500/30 flex items-center justify-center font-medium text-lg hover:scale-105 transform w-full"
+              onClick={() => submitFeedback(feedback)}
+            >
+              Submit Feedback
+            </button>
+          </div>
+
         </aside>
+
+        
       </div>
 
       {/* Enhanced Footer */}
