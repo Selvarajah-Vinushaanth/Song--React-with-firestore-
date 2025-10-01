@@ -339,7 +339,7 @@ export default function MetaphorCreator() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const submitFeedback = (feedback) => {
+  const submitFeedback = async (feedback) => {
     if (!feedback.trim()) {
       toast.error("Please enter your feedback before submitting.", {
         position: "top-right",
@@ -353,17 +353,37 @@ export default function MetaphorCreator() {
       return
     }
 
-    console.log("Metaphor Creator Feedback submitted:", feedback)
-    toast.success("Thank you for your feedback!", {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    })
-    setFeedback("") // Clear feedback after submission
+    try {
+      // Store feedback in Firebase
+      await addDoc(collection(db, "feedback"), {
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        userName: currentUser.displayName || currentUser.email,
+        service: "metaphor-creator",
+        feedback: feedback.trim(),
+        timestamp: serverTimestamp(),
+        rating: null, // Can be extended later for ratings
+        status: "new" // new, reviewed, resolved
+      })
+
+      console.log("Metaphor Creator Feedback submitted:", feedback)
+      toast.success("Thank you for your feedback!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+      setFeedback("") // Clear feedback after submission
+    } catch (error) {
+      console.error("Error submitting feedback:", error)
+      toast.error("Failed to submit feedback. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      })
+    }
   }
 
   const toggleFavorite = async (m) => {

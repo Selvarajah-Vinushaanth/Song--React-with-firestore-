@@ -12,7 +12,8 @@ import {
   Timestamp,
   doc,
   updateDoc,
-  deleteDoc 
+  deleteDoc,
+  serverTimestamp 
 } from 'firebase/firestore';
 import { 
   Chart as ChartJS, 
@@ -76,8 +77,10 @@ import {
   BarChart2,
   PieChart,
   LineChart,
-  Crown
+  Crown,
+  MessageSquare
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 // Register Chart.js components
 ChartJS.register(
@@ -112,7 +115,8 @@ const AdminDashboard = () => {
     apiKeys: [],
     apiRequests: [],
     payments: [],
-    usageLogs: []
+    usageLogs: [],
+    feedback: []
   });
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -261,12 +265,13 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [users, apiKeys, apiRequests, payments, usageLogs] = await Promise.all([
+      const [users, apiKeys, apiRequests, payments, usageLogs, feedback] = await Promise.all([
         fetchUsers(),
         fetchApiKeys(),
         fetchApiRequests(),
         fetchPayments(),
-        fetchUsageLogs()
+        fetchUsageLogs(),
+        fetchFeedback()
       ]);
 
       setDashboardData({
@@ -274,7 +279,8 @@ const AdminDashboard = () => {
         apiKeys,
         apiRequests,
         payments,
-        usageLogs
+        usageLogs,
+        feedback
       });
 
       calculateStats({
@@ -282,7 +288,8 @@ const AdminDashboard = () => {
         apiKeys,
         apiRequests,
         payments,
-        usageLogs
+        usageLogs,
+        feedback
       });
 
       setLoading(false);
@@ -368,6 +375,26 @@ const AdminDashboard = () => {
       return logs.slice(0, 1000); // Limit to 1000 most recent
     } catch (error) {
       console.error('Error fetching usage logs:', error);
+      return [];
+    }
+  };
+
+  const fetchFeedback = async () => {
+    try {
+      const feedbackRef = collection(db, 'feedback');
+      // Get all feedback, sorted by timestamp (newest first)
+      const snapshot = await getDocs(feedbackRef);
+      const feedback = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort by timestamp in memory
+      feedback.sort((a, b) => {
+        if (!a.timestamp || !b.timestamp) return 0;
+        return b.timestamp.toDate() - a.timestamp.toDate();
+      });
+      
+      return feedback;
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
       return [];
     }
   };
@@ -1528,6 +1555,160 @@ const getPaymentPlanData = (range = '7d') => {
     );
   };
 
+  const FeedbackManagement = () => {
+    const [selectedService, setSelectedService] = useState('all');
+    const [selectedStatus, setSelectedStatus] = useState('all');
+    
+    const filteredFeedback = dashboardData.feedback.filter(feedback => {
+      const serviceMatch = selectedService === 'all' || feedback.service === selectedService;
+      const statusMatch = selectedStatus === 'all' || feedback.status === selectedStatus;
+      return serviceMatch && statusMatch;
+    });
+
+    const serviceOptions = [
+      { value: 'all', label: 'All Services' },
+      { value: 'lyric-generator', label: 'Lyric Generator' },
+      { value: 'metaphor-creator', label: 'Metaphor Creator' },
+      { value: 'metaphor-classifier', label: 'Metaphor Classifier' },
+      { value: 'masking-predict', label: 'Masking Predict' }
+    ];
+
+    const statusOptions = [
+      { value: 'all', label: 'All Status' },
+      { value: 'new', label: 'New' },
+      { value: 'reviewed', label: 'Reviewed' },
+      { value: 'resolved', label: 'Resolved' }
+    ];
+
+    const updateFeedbackStatus = async (feedbackId, newStatus) => {
+      try {
+        await updateDoc(doc(db, 'feedback', feedbackId), {
+          status: newStatus,
+          updatedAt: serverTimestamp()
+        });
+        // Refresh data
+        fetchAllData();
+        toast.success('Feedback status updated successfully!');
+      } catch (error) {
+        console.error('Error updating feedback status:', error);
+        toast.error('Failed to update feedback status');
+      }
+    };
+
+    const getServiceColor = (service) => {
+      const colors = {
+        'lyric-generator': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+        'metaphor-creator': 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+        'metaphor-classifier': 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+        'masking-predict': 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+      };
+      return colors[service] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+    };
+
+    const getStatusColor = (status) => {
+      const colors = {
+        'new': 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+        'reviewed': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+        'resolved': 'bg-green-500/20 text-green-300 border-green-500/30'
+      };
+      return colors[status] || 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+    };
+
+    return (
+      <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-semibold text-white flex items-center">
+            <MessageSquare className="h-6 w-6 mr-3 text-purple-400" />
+            User Feedback Management
+          </h3>
+          <div className="flex items-center space-x-4">
+            <select
+              value={selectedService}
+              onChange={(e) => setSelectedService(e.target.value)}
+              className="bg-gray-700/50 border border-gray-600/50 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-400"
+            >
+              {serviceOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-gray-700/50 border border-gray-600/50 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-400"
+            >
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          {filteredFeedback.length > 0 ? (
+            filteredFeedback.map((feedback) => (
+              <div key={feedback.id} className="bg-gray-700/30 border border-gray-600/30 rounded-xl p-4 hover:bg-gray-700/50 transition-all duration-200">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getServiceColor(feedback.service)}`}>
+                      {feedback.service?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(feedback.status)}`}>
+                      {feedback.status?.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <select
+                      value={feedback.status}
+                      onChange={(e) => updateFeedbackStatus(feedback.id, e.target.value)}
+                      className="bg-gray-600/50 border border-gray-500/50 text-white rounded px-2 py-1 text-xs focus:ring-1 focus:ring-purple-500"
+                    >
+                      <option value="new">New</option>
+                      <option value="reviewed">Reviewed</option>
+                      <option value="resolved">Resolved</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <p className="text-gray-300 text-sm leading-relaxed">{feedback.feedback}</p>
+                </div>
+                
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <div className="flex items-center space-x-4">
+                    <span>👤 {feedback.userName || feedback.userEmail}</span>
+                    <span>📧 {feedback.userEmail}</span>
+                  </div>
+                  <span>
+                    {feedback.timestamp?.toDate ? new Date(feedback.timestamp.toDate()).toLocaleString() : 'No date'}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <MessageSquare className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-400">No feedback found matching your criteria</p>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-gray-400 text-sm">
+            Showing {filteredFeedback.length} feedback entries
+          </p>
+          <div className="flex items-center space-x-4">
+            <div className="text-sm text-gray-400">
+              Total: {dashboardData.feedback.length} | 
+              New: {dashboardData.feedback.filter(f => f.status === 'new').length} | 
+              Reviewed: {dashboardData.feedback.filter(f => f.status === 'reviewed').length} | 
+              Resolved: {dashboardData.feedback.filter(f => f.status === 'resolved').length}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -1675,6 +1856,7 @@ const getPaymentPlanData = (range = '7d') => {
                 { id: 'overview', label: 'Overview', icon: BarChart3 },
                 { id: 'analytics', label: 'Analytics', icon: TrendingUp },
                 { id: 'users', label: 'Users', icon: Users },
+                { id: 'feedback', label: 'Feedback', icon: MessageSquare },
                 { id: 'system', label: 'System', icon: Server }
               ].map((tab) => (
                 <button
@@ -2029,6 +2211,12 @@ const getPaymentPlanData = (range = '7d') => {
           {activeTab === 'users' && (
             <div className="space-y-8">
               <UsersTable />
+            </div>
+          )}
+
+          {activeTab === 'feedback' && (
+            <div className="space-y-8">
+              <FeedbackManagement />
             </div>
           )}
 

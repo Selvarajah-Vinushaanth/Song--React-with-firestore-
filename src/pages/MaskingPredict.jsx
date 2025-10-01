@@ -637,7 +637,7 @@ export default function MaskingPredict() {
     }
   }
 
-  const handleFeedbackSubmit = () => {
+  const handleFeedbackSubmit = async () => {
     if (!feedback.trim()) {
       toast.error("Please enter your feedback before submitting.", {
         position: "top-right",
@@ -651,17 +651,37 @@ export default function MaskingPredict() {
       return
     }
     
-    console.log("Feedback submitted:", feedback)
-    setFeedback("")
-    toast.success("Thank you for your feedback!", {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    })
+    try {
+      // Store feedback in Firebase
+      await addDoc(collection(db, "feedback"), {
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        userName: currentUser.displayName || currentUser.email,
+        service: "masking-predict",
+        feedback: feedback.trim(),
+        timestamp: serverTimestamp(),
+        rating: null, // Can be extended later for ratings
+        status: "new" // new, reviewed, resolved
+      })
+
+      console.log("Masking Predict Feedback submitted:", feedback)
+      setFeedback("")
+      toast.success("Thank you for your feedback!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+    } catch (error) {
+      console.error("Error submitting feedback:", error)
+      toast.error("Failed to submit feedback. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      })
+    }
   }
 
   return (

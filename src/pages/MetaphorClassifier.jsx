@@ -85,7 +85,7 @@ export default function MetaphorClassifier() {
     "அந்த பெண்ணின் கண்கள் நட்சத்திரங்கள் போல மின்னின. (Her eyes sparkled like stars.)",
     "Words are the dress of thoughts.",
   ]
-  const submitFeedback = (feedback) => {
+  const submitFeedback = async (feedback) => {
     if (!feedback.trim()) {
       toast.error("Please enter your feedback before submitting.", {
         position: "top-right",
@@ -99,16 +99,37 @@ export default function MetaphorClassifier() {
       return
     }
 
-    console.log("Feedback submitted:", feedback)
-    toast.success("Thank you for your feedback!", {
-      position: "top-right",
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    })
+    try {
+      // Store feedback in Firebase
+      await addDoc(collection(db, "feedback"), {
+        userId: currentUser.uid,
+        userEmail: currentUser.email,
+        userName: currentUser.displayName || currentUser.email,
+        service: "metaphor-classifier",
+        feedback: feedback.trim(),
+        timestamp: serverTimestamp(),
+        rating: null, // Can be extended later for ratings
+        status: "new" // new, reviewed, resolved
+      })
+
+      console.log("Metaphor Classifier Feedback submitted:", feedback)
+      toast.success("Thank you for your feedback!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
+      setFeedback("") // Clear feedback after submission
+    } catch (error) {
+      console.error("Error submitting feedback:", error)
+      toast.error("Failed to submit feedback. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      })
+    }
   }
   const handleInputChange = (e) => {
     setInputText(e.target.value)
