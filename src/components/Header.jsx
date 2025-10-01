@@ -103,8 +103,8 @@ useEffect(() => {
         <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent"></div>
       </div>
 
-      <div className="max-w-7xl px-2 sm:px-4 lg:px-6 relative">
-        <div className="flex h-20 items-center">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 relative">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="group flex items-center gap-3">
@@ -117,19 +117,8 @@ useEffect(() => {
             </Link>
           </div>
 
-          {/* Navigation - Centered */}
-          <nav className="flex-1 flex justify-end items-center ml-60 space-x-8">
-            {/* <Link 
-              to="/" 
-              className={`px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                isActive('/') 
-                  ? 'bg-purple-500/20 text-purple-300 shadow-inner' 
-                  : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-              }`}
-            >
-              Home
-            </Link> */}
-            
+          {/* Navigation */}
+          <nav className="flex items-center space-x-4">
             {currentUser ? (
               <>
                 <Link 
@@ -296,18 +285,7 @@ useEffect(() => {
                 </button>
               </>
             ) : (
-              <>
-                {/* <button
-                  onClick={() => setShowShortcutsHelp(true)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 text-indigo-300 hover:text-white bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-700/30 hover:border-indigo-600/40"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                  <span>Shortcuts</span>
-                  <kbd className="ml-1 px-1.5 py-0.5 text-xs bg-indigo-800/80 rounded">?</kbd>
-                </button> */}
-                <nav className="flex-1 flex justify-start items-center ml-100 space-x-8">
+              <div className="flex items-center space-x-4">
                 <Link
                   to="/login"
                   className="px-4 py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-200 text-gray-300 hover:text-white hover:bg-white/5 border border-transparent"
@@ -320,8 +298,7 @@ useEffect(() => {
                 >
                   Sign Up
                 </Link>
-                </nav>
-              </>
+              </div>
             )}
           </nav>
         </div>
