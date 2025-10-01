@@ -15,6 +15,8 @@ export default function SubscriptionDashboard() {
     SUBSCRIPTION_PLANS,
     upgradeSubscription,
     handlePaymentSuccess,
+    getAvailablePlans,
+    isPlanChangeAllowed,
     loading
   } = usePayment();
 
@@ -25,6 +27,41 @@ export default function SubscriptionDashboard() {
 
   const currentPlan = userSubscription ? SUBSCRIPTION_PLANS[userSubscription.planId] : SUBSCRIPTION_PLANS.free;
   const tokenUsagePercentage = currentPlan ? ((currentPlan.tokens - remainingTokens) / currentPlan.tokens) * 100 : 0;
+  
+  // Get available plans for upgrade
+  const currentPlanId = userSubscription?.planId || 'free';
+  const availablePlanIds = getAvailablePlans ? getAvailablePlans(currentPlanId) : [];
+  
+  // Helper function to determine if a plan should be shown and how
+  const getPlanDisplayInfo = (plan) => {
+    const isCurrentPlan = currentPlanId === plan.id;
+    const isAvailableForUpgrade = availablePlanIds.includes(plan.id);
+    const isFreePlan = plan.id === 'free';
+    
+    return {
+      show: true, // Show all plans for reference
+      isCurrentPlan,
+      isAvailableForUpgrade,
+      isFreePlan,
+      buttonText: isCurrentPlan 
+        ? 'Current Plan'
+        : isFreePlan 
+        ? 'Free Plan'
+        : isAvailableForUpgrade 
+        ? `Upgrade to ${plan.name}`
+        : 'Not Available',
+      buttonEnabled: isAvailableForUpgrade,
+      buttonClass: isCurrentPlan
+        ? 'bg-green-600 text-white cursor-default'
+        : isFreePlan
+        ? 'bg-gray-600 text-gray-300 cursor-default'
+        : isAvailableForUpgrade
+        ? plan.popular
+          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+          : 'bg-blue-600 text-white hover:bg-blue-700'
+        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+    };
+  };
 
   // Handle upgrade button click - redirects to Stripe checkout
   const handleUpgrade = async (planId) => {
@@ -281,14 +318,20 @@ export default function SubscriptionDashboard() {
         <div className="max-w-7xl mx-auto mb-12">
           <h2 className="text-3xl font-bold text-center mb-8">Choose Your Plan</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.values(SUBSCRIPTION_PLANS).map((plan) => (
+            {Object.values(SUBSCRIPTION_PLANS).map((plan) => {
+              const displayInfo = getPlanDisplayInfo(plan);
+              
+              return (
               <div
                 key={plan.id}
                 className={`relative bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 border transition-all duration-300 hover:scale-105 ${
                   plan.popular
                     ? 'border-purple-500 shadow-lg shadow-purple-500/25'
                     : 'border-gray-700 hover:border-blue-500'
-                } ${userSubscription?.planId === plan.id ? 'ring-2 ring-green-500' : ''}`}
+                } ${displayInfo.isCurrentPlan ? 'ring-2 ring-green-500' : ''} ${
+                  !displayInfo.isAvailableForUpgrade && !displayInfo.isCurrentPlan && !displayInfo.isFreePlan 
+                    ? 'opacity-60' : ''
+                }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -329,34 +372,35 @@ export default function SubscriptionDashboard() {
                   ))}
                 </ul>
 
-                {plan.id === 'free' ? (
-                  // Free plan - no upgrade button, just informational
-                  <div className="w-full py-3 px-4 rounded-lg font-semibold text-center bg-gray-600 text-gray-300 cursor-default">
-                    {userSubscription?.planId === 'free' ? 'Current Plan' : 'Free Plan'}
+                {/* Smart button logic based on plan availability */}
+                {displayInfo.isFreePlan ? (
+                  // Free plan - informational only
+                  <div className={`w-full py-3 px-4 rounded-lg font-semibold text-center ${displayInfo.buttonClass}`}>
+                    {displayInfo.buttonText}
                   </div>
                 ) : (
-                  // Paid plans - upgrade button
+                  // Paid plans - context-aware button
                   <button
-                    onClick={() => handleUpgrade(plan.id)}
-                    disabled={userSubscription?.planId === plan.id || upgradingPlan === plan.id}
-                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
-                      userSubscription?.planId === plan.id
-                        ? 'bg-green-600 text-white cursor-default'
-                        : plan.popular
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
+                    onClick={() => displayInfo.buttonEnabled ? handleUpgrade(plan.id) : null}
+                    disabled={!displayInfo.buttonEnabled || upgradingPlan === plan.id}
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${displayInfo.buttonClass}`}
                   >
-                    {userSubscription?.planId === plan.id 
-                      ? 'Current Plan' 
-                      : upgradingPlan === plan.id 
+                    {upgradingPlan === plan.id 
                       ? 'Redirecting to Stripe...' 
-                      : `Upgrade to ${plan.name}`
+                      : displayInfo.buttonText
                     }
                   </button>
                 )}
+                
+                {/* Show upgrade restriction message for unavailable plans */}
+                {!displayInfo.isAvailableForUpgrade && !displayInfo.isCurrentPlan && !displayInfo.isFreePlan && (
+                  <p className="text-xs text-gray-500 mt-2 text-center">
+                    You can only upgrade to higher-tier plans
+                  </p>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

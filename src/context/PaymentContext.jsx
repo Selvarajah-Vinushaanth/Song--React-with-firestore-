@@ -96,6 +96,48 @@ const SUBSCRIPTION_PLANS = {
   }
 };
 
+// Plan hierarchy for upgrade/downgrade logic
+const PLAN_HIERARCHY = {
+  free: 0,
+  basic: 1,
+  pro: 2,
+  enterprise: 3
+};
+
+// Get available plans for upgrade based on current plan
+const getAvailablePlans = (currentPlanId) => {
+  if (!currentPlanId || currentPlanId === 'free') {
+    // Free users can choose any paid plan
+    return ['basic', 'pro', 'enterprise'];
+  }
+  
+  const currentLevel = PLAN_HIERARCHY[currentPlanId];
+  const availablePlans = [];
+  
+  // Add all plans with higher level (upgrades only)
+  Object.keys(PLAN_HIERARCHY).forEach(planId => {
+    if (PLAN_HIERARCHY[planId] > currentLevel) {
+      availablePlans.push(planId);
+    }
+  });
+  
+  return availablePlans;
+};
+
+// Check if a plan change is allowed
+const isPlanChangeAllowed = (currentPlanId, targetPlanId) => {
+  if (!currentPlanId || currentPlanId === 'free') {
+    // Free users can upgrade to any paid plan
+    return targetPlanId !== 'free';
+  }
+  
+  const currentLevel = PLAN_HIERARCHY[currentPlanId];
+  const targetLevel = PLAN_HIERARCHY[targetPlanId];
+  
+  // Only allow upgrades (higher level plans)
+  return targetLevel > currentLevel;
+};
+
 // Token costs per service
 const SERVICE_TOKEN_COSTS = {
   'metaphor-classifier': 1,
@@ -266,6 +308,14 @@ export function PaymentProvider({ children }) {
 
     if (planId === 'free') {
       throw new Error('Cannot upgrade to free plan');
+    }
+
+    // Check if this plan change is allowed
+    const currentPlanId = userSubscription?.planId || 'free';
+    if (!isPlanChangeAllowed(currentPlanId, planId)) {
+      const currentPlanName = SUBSCRIPTION_PLANS[currentPlanId]?.name || 'Free Plan';
+      const targetPlanName = SUBSCRIPTION_PLANS[planId]?.name || planId;
+      throw new Error(`Cannot downgrade from ${currentPlanName} to ${targetPlanName}. You can only upgrade to higher plans.`);
     }
 
     try {
@@ -628,7 +678,9 @@ export function PaymentProvider({ children }) {
     verifyPaymentSession,
     checkSubscriptionStatus,
     fetchPaymentHistory,
-    assignFreePlan
+    assignFreePlan,
+    getAvailablePlans,
+    isPlanChangeAllowed
   };
 
   return (
