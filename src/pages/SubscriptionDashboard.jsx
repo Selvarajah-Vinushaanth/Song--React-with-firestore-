@@ -3,18 +3,7 @@ import { usePayment } from '../context/PaymentContext';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import {
-  CreditCard,
-  Zap,
-  Star,
-  Crown,
-  Check,
-  X,
-  TrendingUp,
-  Calendar,
-  DollarSign,
-  Users,
-  Shield,
-  Sparkles
+  Check
 } from 'lucide-react';
 
 export default function SubscriptionDashboard() {
@@ -25,69 +14,118 @@ export default function SubscriptionDashboard() {
     paymentHistory,
     SUBSCRIPTION_PLANS,
     upgradeSubscription,
+    handlePaymentSuccess,
     loading
   } = usePayment();
 
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [paymentLoading, setPaymentLoading] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardholderName: ''
-  });
+  const [upgradingPlan, setUpgradingPlan] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [justUpgraded, setJustUpgraded] = useState(false);
 
   const currentPlan = userSubscription ? SUBSCRIPTION_PLANS[userSubscription.planId] : SUBSCRIPTION_PLANS.free;
   const tokenUsagePercentage = currentPlan ? ((currentPlan.tokens - remainingTokens) / currentPlan.tokens) * 100 : 0;
 
-  const handleUpgrade = (planId) => {
-    setSelectedPlan(SUBSCRIPTION_PLANS[planId]);
-    setShowPaymentModal(true);
-  };
-
-  const handlePayment = async (e) => {
-    e.preventDefault();
-    setPaymentLoading(true);
-
+  // Handle upgrade button click - redirects to Stripe checkout
+  const handleUpgrade = async (planId) => {
+    if (planId === 'free') return;
+    
+    setUpgradingPlan(planId);
+    setErrorMessage('');
+    
     try {
-      await upgradeSubscription(selectedPlan.id, paymentForm);
-      setShowPaymentModal(false);
-      setPaymentForm({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: '',
-        cardholderName: ''
-      });
+      await upgradeSubscription(planId);
+      // User will be redirected to Stripe checkout page
     } catch (error) {
-      console.error('Payment failed:', error);
-    } finally {
-      setPaymentLoading(false);
+      console.error('Upgrade failed:', error);
+      setErrorMessage(error.message || 'Failed to start upgrade process. Please try again.');
+      setUpgradingPlan(null);
     }
   };
 
-  const formatCardNumber = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    const planId = urlParams.get('plan');
 
-  const formatExpiryDate = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    console.log('URL params:', { sessionId, success, canceled, planId });
+
+    // Check localStorage for pending upgrade if URL params are missing
+    let upgradePlan = planId;
+    if (!planId) {
+      const pendingUpgrade = localStorage.getItem('pendingUpgrade');
+      if (pendingUpgrade) {
+        try {
+          const parsed = JSON.parse(pendingUpgrade);
+          upgradePlan = parsed.planId;
+          console.log('Found pending upgrade in localStorage:', parsed);
+        } catch (e) {
+          console.error('Failed to parse pending upgrade:', e);
+        }
+      }
     }
-    return v;
-  };
+
+    if (success === 'true' && upgradePlan) {
+      console.log(`Processing successful payment return for plan: ${upgradePlan}`);
+      setUpgradingPlan(null);
+      
+      // Clear pending upgrade from localStorage
+      localStorage.removeItem('pendingUpgrade');
+      
+      handlePaymentSuccess(sessionId, upgradePlan)
+        .then((result) => {
+          if (result) {
+            const planName = SUBSCRIPTION_PLANS[upgradePlan]?.name || upgradePlan;
+            setSuccessMessage(`🎉 Welcome to ${planName}! Your subscription has been upgraded and tokens have been refreshed.`);
+            setJustUpgraded(true);
+            console.log('Payment processing completed successfully');
+            
+            // Show success for longer since it's an important event
+            setTimeout(() => {
+              setJustUpgraded(false);
+            }, 10000); // 10 seconds
+          } else {
+            setErrorMessage('⚠️ Payment verification failed. Please contact support if your payment was charged.');
+          }
+          // Clean up URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+        })
+        .catch((error) => {
+          console.error('Payment success handling failed:', error);
+          setErrorMessage('❌ Failed to complete upgrade. Please contact support if your payment was charged.');
+          // Clean up URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+        });
+    } else if (canceled === 'true') {
+      setErrorMessage('💳 Payment was canceled. You can try again anytime.');
+      setUpgradingPlan(null);
+      console.log('Payment was canceled by user');
+      // Clear pending upgrade from localStorage
+      localStorage.removeItem('pendingUpgrade');
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (success === 'true' && !upgradePlan) {
+      // Success but no plan identified - try to handle gracefully
+      console.warn('Payment success detected but no plan identified');
+      setErrorMessage('⚠️ Payment completed but plan details were lost. Please contact support.');
+      // Clean up URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [handlePaymentSuccess, SUBSCRIPTION_PLANS]);
+
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+        setErrorMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   if (loading) {
     return (
@@ -107,6 +145,45 @@ export default function SubscriptionDashboard() {
       {/* Header */}
       <Header />
 
+      {/* Success/Error Messages */}
+      {(successMessage || errorMessage) && (
+        <div className="fixed top-4 right-4 z-50 max-w-md">
+          <div className={`p-4 rounded-lg shadow-lg ${
+            successMessage 
+              ? 'bg-green-600 border border-green-500' 
+              : 'bg-red-600 border border-red-500'
+          }`}>
+            <p className="text-white font-semibold">
+              {successMessage || errorMessage}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Just Upgraded Celebration Banner */}
+      {justUpgraded && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-green-400">
+            <div className="text-6xl mb-4">🎉</div>
+            <h2 className="text-2xl font-bold text-white mb-2">Upgrade Successful!</h2>
+            <p className="text-green-100 mb-4">
+              Welcome to {currentPlan.name}! Your subscription has been activated and your tokens have been refreshed.
+            </p>
+            <div className="bg-white/20 rounded-lg p-3 mb-4">
+              <p className="text-white font-semibold">
+                {remainingTokens.toLocaleString()} tokens available
+              </p>
+            </div>
+            <button
+              onClick={() => setJustUpgraded(false)}
+              className="bg-white text-green-600 px-6 py-2 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Background decorative elements */}
       <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl animate-pulse opacity-70"></div>
       <div className="absolute bottom-40 right-20 w-80 h-80 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "2s" }}></div>
@@ -124,12 +201,15 @@ export default function SubscriptionDashboard() {
 
         {/* Current Plan Card */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className={`bg-gradient-to-r ${currentPlan.color} rounded-3xl p-8 shadow-2xl border border-white/20`}>
+          <div className={`bg-gradient-to-r ${currentPlan.color} rounded-3xl p-8 shadow-2xl border border-white/20 ${justUpgraded ? 'ring-4 ring-green-400 ring-opacity-75 animate-pulse' : ''}`}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="text-4xl">{currentPlan.icon}</div>
                 <div>
-                  <h2 className="text-2xl font-bold">{currentPlan.name}</h2>
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    {currentPlan.name}
+                    {justUpgraded && <span className="text-sm bg-green-500 text-white px-2 py-1 rounded-full">✨ Just Upgraded!</span>}
+                  </h2>
                   <p className="text-white/80">Your current plan</p>
                 </div>
               </div>
@@ -249,19 +329,32 @@ export default function SubscriptionDashboard() {
                   ))}
                 </ul>
 
-                <button
-                  onClick={() => handleUpgrade(plan.id)}
-                  disabled={userSubscription?.planId === plan.id}
-                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-                    userSubscription?.planId === plan.id
-                      ? 'bg-green-600 text-white cursor-default'
-                      : plan.popular
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  {userSubscription?.planId === plan.id ? 'Current Plan' : 'Upgrade'}
-                </button>
+                {plan.id === 'free' ? (
+                  // Free plan - no upgrade button, just informational
+                  <div className="w-full py-3 px-4 rounded-lg font-semibold text-center bg-gray-600 text-gray-300 cursor-default">
+                    {userSubscription?.planId === 'free' ? 'Current Plan' : 'Free Plan'}
+                  </div>
+                ) : (
+                  // Paid plans - upgrade button
+                  <button
+                    onClick={() => handleUpgrade(plan.id)}
+                    disabled={userSubscription?.planId === plan.id || upgradingPlan === plan.id}
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      userSubscription?.planId === plan.id
+                        ? 'bg-green-600 text-white cursor-default'
+                        : plan.popular
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {userSubscription?.planId === plan.id 
+                      ? 'Current Plan' 
+                      : upgradingPlan === plan.id 
+                      ? 'Redirecting to Stripe...' 
+                      : `Upgrade to ${plan.name}`
+                    }
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -311,103 +404,6 @@ export default function SubscriptionDashboard() {
         )}
       </div>
 
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-gray-700">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold">Upgrade to {selectedPlan?.name}</h3>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold">${selectedPlan?.price}</div>
-                <div className="text-white/80">per month</div>
-              </div>
-            </div>
-
-            <form onSubmit={handlePayment} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Cardholder Name
-                </label>
-                <input
-                  type="text"
-                  value={paymentForm.cardholderName}
-                  onChange={(e) => setPaymentForm(prev => ({ ...prev, cardholderName: e.target.value }))}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Card Number
-                </label>
-                <input
-                  type="text"
-                  value={paymentForm.cardNumber}
-                  onChange={(e) => setPaymentForm(prev => ({ ...prev, cardNumber: formatCardNumber(e.target.value) }))}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="1234 5678 9012 3456"
-                  maxLength="19"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Expiry Date
-                  </label>
-                  <input
-                    type="text"
-                    value={paymentForm.expiryDate}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, expiryDate: formatExpiryDate(e.target.value) }))}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="MM/YY"
-                    maxLength="5"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    CVV
-                  </label>
-                  <input
-                    type="text"
-                    value={paymentForm.cvv}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, cvv: e.target.value.replace(/\D/g, '') }))}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="123"
-                    maxLength="4"
-                    required
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={paymentLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {paymentLoading ? 'Processing...' : `Pay $${selectedPlan?.price}`}
-              </button>
-            </form>
-
-            <div className="mt-4 text-center text-sm text-gray-400">
-              <p>🔒 Secure payment processing</p>
-            </div>
-          </div>
-        </div>
-      )}
       <footer className="relative text-center py-16 text-gray-400 border-t border-gray-800/50 mt-auto backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         <div className="relative z-10">

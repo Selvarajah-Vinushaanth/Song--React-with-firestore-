@@ -15,6 +15,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from './AuthContext';
+import getStripe, { STRIPE_CONFIG } from '../config/stripe';
 
 const PaymentContext = createContext();
 
@@ -257,67 +258,174 @@ export function PaymentProvider({ children }) {
     }
   };
 
-  // Upgrade subscription
-  const upgradeSubscription = async (planId, paymentDetails) => {
-    if (!currentUser) return false;
+  // Upgrade subscription using modern Stripe approach
+  const upgradeSubscription = async (planId) => {
+    if (!currentUser) {
+      throw new Error('Please log in to upgrade your subscription');
+    }
+
+    if (planId === 'free') {
+      throw new Error('Cannot upgrade to free plan');
+    }
 
     try {
       const plan = SUBSCRIPTION_PLANS[planId];
-      const userDocRef = doc(db, 'users', currentUser.uid);
-
-      // Simulate payment processing (replace with actual payment gateway)
-      const paymentResult = await processPayment(paymentDetails, plan.price);
       
-      if (paymentResult.success) {
-        const newSubscription = {
-          planId: planId,
-          status: 'active',
-          startDate: serverTimestamp(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          tokensRemaining: plan.tokens,
-          tokensUsed: 0,
-          autoRenew: true,
-          paymentId: paymentResult.paymentId
-        };
-
-        await updateDoc(userDocRef, {
-          subscription: newSubscription
-        });
-
-        // Log payment
-        await addDoc(collection(db, 'payments'), {
-          userId: currentUser.uid,
-          planId: planId,
-          amount: plan.price,
-          paymentId: paymentResult.paymentId,
-          status: 'completed',
-          timestamp: serverTimestamp()
-        });
-
-        setUserSubscription(newSubscription);
-        setRemainingTokens(plan.tokens);
-        
-        return true;
+      // Check if Payment Link exists for this plan
+      if (!STRIPE_CONFIG.paymentLinks[planId]) {
+        throw new Error(`Payment link not configured for ${planId} plan. Please check your .env file.`);
       }
+
+      const paymentLinkUrl = STRIPE_CONFIG.paymentLinks[planId];
+      
+      // Validate the URL format
+      if (!paymentLinkUrl.includes('buy.stripe.com')) {
+        throw new Error('Invalid Stripe Payment Link URL format');
+      }
+
+      console.log(`Redirecting to Stripe Payment Link for ${planId} plan:`, paymentLinkUrl);
+      console.log(`Expected success URL should be: ${STRIPE_CONFIG.domain}/subscription-dashboard?success=true&plan=${planId}&session_id={CHECKOUT_SESSION_ID}`);
+      
+      // Store the attempted upgrade in localStorage for backup
+      localStorage.setItem('pendingUpgrade', JSON.stringify({
+        planId: planId,
+        userId: currentUser.uid,
+        timestamp: Date.now()
+      }));
+      
+      // Direct redirect to Stripe Payment Link
+      window.location.href = paymentLinkUrl;
+
+      return { success: true };
     } catch (error) {
-      console.error('Error upgrading subscription:', error);
+      console.error('Error creating Stripe checkout:', error);
       throw error;
     }
-    
-    return false;
   };
 
-  // Simulate payment processing (replace with Stripe, PayPal, etc.)
-  const processPayment = async (paymentDetails, amount) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          paymentId: 'pay_' + Math.random().toString(36).substr(2, 9),
-          amount: amount
-        });
-      }, 2000);
-    });
+  // Handle successful payment return from Stripe checkout
+  const handlePaymentSuccess = async (sessionId, planId) => {
+    console.log('🚀 handlePaymentSuccess called with:', { sessionId, planId, currentUser: currentUser?.uid });
+    
+    if (!currentUser || !planId) {
+      console.error('❌ Missing required data for payment success handling:', { 
+        currentUser: !!currentUser, 
+        planId: planId 
+      });
+      return false;
+    }
+
+    try {
+      console.log(`✅ Processing successful payment for user ${currentUser.uid}, plan: ${planId}, session: ${sessionId}`);
+      
+      const plan = SUBSCRIPTION_PLANS[planId];
+      if (!plan) {
+        throw new Error(`Invalid plan ID: ${planId}`);
+      }
+
+      console.log('📋 Plan details:', plan);
+
+      const userDocRef = doc(db, 'users', currentUser.uid);
+
+      // Create new subscription object
+      const newSubscription = {
+        planId: planId,
+        planName: plan.name,
+        status: 'active',
+        startDate: serverTimestamp(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        tokensRemaining: plan.tokens,
+        tokensUsed: 0,
+        autoRenew: true,
+        stripeSessionId: sessionId || null,
+        lastUpdated: serverTimestamp(),
+        upgradedAt: serverTimestamp()
+      };
+
+      console.log('💾 Updating user subscription in Firebase...', newSubscription);
+
+      // Update user subscription in Firebase
+      await updateDoc(userDocRef, {
+        subscription: newSubscription
+      });
+
+      console.log('✅ Successfully updated user subscription in Firebase');
+
+      // Check if payment already exists to prevent duplicates
+      if (sessionId) {
+        const existingPaymentQuery = query(
+          collection(db, 'payments'),
+          where('stripeSessionId', '==', sessionId),
+          where('userId', '==', currentUser.uid)
+        );
+        
+        const existingPayments = await getDocs(existingPaymentQuery);
+        
+        if (!existingPayments.empty) {
+          console.log('⚠️ Payment already exists for session:', sessionId);
+          // Update local state but don't create duplicate payment record
+          setUserSubscription(newSubscription);
+          setRemainingTokens(plan.tokens);
+          await fetchPaymentHistory();
+          setLoading(false);
+          return true;
+        }
+      }
+
+      // Log payment in payments collection
+      const paymentData = {
+        userId: currentUser.uid,
+        planId: planId,
+        planName: plan.name,
+        amount: plan.price,
+        stripeSessionId: sessionId || null,
+        status: 'completed',
+        timestamp: serverTimestamp(),
+        userEmail: currentUser.email
+      };
+
+      console.log('💰 Logging payment in Firebase...', paymentData);
+
+      await addDoc(collection(db, 'payments'), paymentData);
+      console.log('✅ Successfully logged payment in Firebase');
+
+      // Update local state immediately
+      console.log('🔄 Updating local state...');
+      setUserSubscription(newSubscription);
+      setRemainingTokens(plan.tokens);
+      
+      // Refresh payment history
+      console.log('📋 Refreshing payment history...');
+      await fetchPaymentHistory();
+      
+      // Force re-render by updating loading state
+      setLoading(false);
+      
+      console.log('🎉 Payment success handling completed successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error handling payment success:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      throw error;
+    }
+  };
+
+  // Verify payment session (optional - for additional security)
+  const verifyPaymentSession = async (sessionId) => {
+    try {
+      // In a production app, you might want to verify the session with Stripe API
+      // For now, we'll trust the session_id from the URL
+      console.log('Session verification would happen here for:', sessionId);
+      return true;
+    } catch (error) {
+      console.error('Error verifying payment session:', error);
+      return false;
+    }
   };
 
   // Get payment history
@@ -337,37 +445,140 @@ export function PaymentProvider({ children }) {
         ...doc.data()
       }));
       
+      // Remove duplicates based on stripeSessionId
+      const uniquePayments = [];
+      const seenSessionIds = new Set();
+      
+      for (const payment of payments) {
+        if (payment.stripeSessionId) {
+          if (!seenSessionIds.has(payment.stripeSessionId)) {
+            seenSessionIds.add(payment.stripeSessionId);
+            uniquePayments.push(payment);
+          } else {
+            console.log('🔍 Found duplicate payment, skipping:', payment.id);
+          }
+        } else {
+          // Keep payments without session IDs (legacy or manual payments)
+          uniquePayments.push(payment);
+        }
+      }
+      
       // Sort by timestamp in memory to avoid index requirement
-      payments.sort((a, b) => {
+      uniquePayments.sort((a, b) => {
         if (!a.timestamp || !b.timestamp) return 0;
         return b.timestamp.toDate() - a.timestamp.toDate();
       });
       
-      setPaymentHistory(payments);
+      setPaymentHistory(uniquePayments);
     } catch (error) {
       console.error('Error fetching payment history:', error);
       setPaymentHistory([]); // Set empty array on error
     }
   };
 
-  // Reset tokens (for monthly renewal)
-  const resetMonthlyTokens = async () => {
+  // Check and handle subscription expiration
+  const checkSubscriptionStatus = async () => {
     if (!currentUser || !userSubscription) return;
 
     try {
-      const plan = SUBSCRIPTION_PLANS[userSubscription.planId];
-      const userDocRef = doc(db, 'users', currentUser.uid);
+      const now = new Date();
+      const endDate = userSubscription.endDate instanceof Date ? 
+        userSubscription.endDate : 
+        userSubscription.endDate?.toDate();
 
-      await updateDoc(userDocRef, {
-        'subscription.tokensRemaining': plan.tokens,
-        'subscription.tokensUsed': 0,
-        'subscription.startDate': serverTimestamp(),
-        'subscription.endDate': new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      if (!endDate) return; // No end date means no expiration
+
+      console.log('🔍 Checking subscription status:', {
+        planId: userSubscription.planId,
+        endDate: endDate.toISOString(),
+        now: now.toISOString(),
+        expired: now > endDate
       });
 
-      setRemainingTokens(plan.tokens);
+      const userDocRef = doc(db, 'users', currentUser.uid);
+
+      if (now > endDate) {
+        // Subscription has expired
+        if (userSubscription.planId === 'free') {
+          // Free plan users get token refresh
+          console.log('🔄 Refreshing tokens for free plan user');
+          const freeTokens = SUBSCRIPTION_PLANS.free.tokens;
+          
+          const updatedSubscription = {
+            ...userSubscription,
+            tokensRemaining: freeTokens,
+            tokensUsed: 0,
+            startDate: serverTimestamp(),
+            endDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // Next month
+            lastUpdated: serverTimestamp()
+          };
+
+          await updateDoc(userDocRef, {
+            subscription: updatedSubscription
+          });
+
+          setUserSubscription(updatedSubscription);
+          setRemainingTokens(freeTokens);
+          
+        } else {
+          // Paid plan users downgrade to free
+          console.log('⬇️ Downgrading expired paid subscription to free plan');
+          const freeTokens = SUBSCRIPTION_PLANS.free.tokens;
+          
+          const downgradedSubscription = {
+            planId: 'free',
+            planName: SUBSCRIPTION_PLANS.free.name,
+            status: 'active',
+            startDate: serverTimestamp(),
+            endDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // Next month
+            tokensRemaining: freeTokens,
+            tokensUsed: 0,
+            autoRenew: false,
+            lastUpdated: serverTimestamp(),
+            downgradedFrom: userSubscription.planId,
+            downgradedAt: serverTimestamp()
+          };
+
+          await updateDoc(userDocRef, {
+            subscription: downgradedSubscription
+          });
+
+          setUserSubscription(downgradedSubscription);
+          setRemainingTokens(freeTokens);
+        }
+      } else {
+        // Subscription is still active - check if it's a new month for free users
+        if (userSubscription.planId === 'free') {
+          const startDate = userSubscription.startDate instanceof Date ? 
+            userSubscription.startDate : 
+            userSubscription.startDate?.toDate();
+          
+          const daysSinceStart = startDate ? (now - startDate) / (1000 * 60 * 60 * 24) : 0;
+          
+          // If it's been 30+ days since start, refresh free tokens
+          if (daysSinceStart >= 30) {
+            console.log('🔄 Monthly token refresh for free plan user');
+            const freeTokens = SUBSCRIPTION_PLANS.free.tokens;
+            
+            const refreshedSubscription = {
+              ...userSubscription,
+              tokensRemaining: freeTokens,
+              tokensUsed: 0,
+              startDate: serverTimestamp(),
+              lastUpdated: serverTimestamp()
+            };
+
+            await updateDoc(userDocRef, {
+              subscription: refreshedSubscription
+            });
+
+            setUserSubscription(refreshedSubscription);
+            setRemainingTokens(freeTokens);
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error resetting monthly tokens:', error);
+      console.error('Error checking subscription status:', error);
     }
   };
 
@@ -378,6 +589,8 @@ export function PaymentProvider({ children }) {
         console.log('User logged in, initializing subscription for:', currentUser.uid);
         await initializeUserSubscription(currentUser.uid);
         await fetchPaymentHistory();
+        // Check subscription status after loading
+        setTimeout(() => checkSubscriptionStatus(), 1000);
       } else {
         console.log('User logged out, clearing subscription data');
         setUserSubscription(null);
@@ -390,6 +603,17 @@ export function PaymentProvider({ children }) {
     handleUserLogin();
   }, [currentUser]);
 
+  // Check subscription status periodically (every 5 minutes)
+  useEffect(() => {
+    if (!currentUser || !userSubscription) return;
+
+    const interval = setInterval(() => {
+      checkSubscriptionStatus();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [currentUser, userSubscription]);
+
   const value = {
     userSubscription,
     remainingTokens,
@@ -400,7 +624,9 @@ export function PaymentProvider({ children }) {
     checkTokensAvailable,
     consumeTokens,
     upgradeSubscription,
-    resetMonthlyTokens,
+    handlePaymentSuccess,
+    verifyPaymentSession,
+    checkSubscriptionStatus,
     fetchPaymentHistory,
     assignFreePlan
   };

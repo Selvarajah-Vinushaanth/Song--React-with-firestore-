@@ -4,7 +4,9 @@ import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PaymentProvider } from './context/PaymentContext';
 import { KeyboardShortcutsProvider } from './context/KeyboardShortcutsContext';
+import StripeProvider from './components/StripeProvider';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
+import ChatFlowise from './pages/ChatFlowise';
 
 // Import page components
 import HomePage from './pages/HomePage';
@@ -12,6 +14,7 @@ import MetaphorClassifier from './pages/MetaphorClassifier';
 import LyricGenerator from './pages/LyricGenerator';
 import MetaphorCreator from './pages/MetaphorCreator';
 import ChatPage from './pages/ChatPage'; // Use the regular chat page
+import ChatPageNew from './pages/ChatPageNew'; // Use the new chat page
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -37,10 +40,11 @@ function App() {
   return (
     <AuthProvider>
       <PaymentProvider>
-        <Router>
-          <KeyboardShortcutsProvider>
-            <KeyboardShortcutsHelp />
-            <div className="App">
+        <StripeProvider>
+          <Router>
+            <KeyboardShortcutsProvider>
+              <KeyboardShortcutsHelp />
+              <div className="App">
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<HomePage />} />
@@ -65,6 +69,16 @@ function App() {
                     </PrivateRoute>
                   } 
                 />
+               
+<Route 
+  path="/chatbot"
+  element={
+    <PrivateRoute>
+      <ChatFlowise />
+    </PrivateRoute>
+    
+  }
+/>
                 <Route 
                   path="/metaphor-creator" 
                   element={
@@ -85,7 +99,7 @@ function App() {
                   path="/chat" 
                   element={
                     <PrivateRoute>
-                      <ChatPage />
+                      <ChatPageNew />
                     </PrivateRoute>
                   } 
                 />
@@ -133,6 +147,7 @@ function App() {
             </div>
           </KeyboardShortcutsProvider>
         </Router>
+        </StripeProvider>
       </PaymentProvider>
     </AuthProvider>
   );

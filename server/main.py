@@ -414,6 +414,89 @@ async def create_lyrics(request:LyricsRequestRealAgent):
     except Exception as e:
         print(f"Error generating lyrics: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating lyrics: {str(e)}")
+
+class MetaphorRequestRealAgent(BaseModel):
+    name: str  
+    source: str
+    target: str
+    # Prefer Context from frontend (supports Tamil/English); keep emotion for backward compatibility
+    context: str
+    count: int= 2
+    # userId:str
+      
+@app.post("/api/create-metaphors-agent", response_model=MetaphorResponse)
+async def create_metaphors(request: MetaphorRequestRealAgent):
+    try:
+        print(request)
+        # Prefer explicit Context from client; else derive from emotion for backward compatibility
+        emotion_to_context = {
+            "positive": "romantic",
+            "negative": "philosophical",
+            "neutral": "poetic",
+        }
+        normalized_context = (
+            (request.context or "").strip()
+            or emotion_to_context.get((request.emotion or "").strip().lower(), "poetic")
+        )
+
+        # Call new signature: generate_metaphor(source, target, Context, count)
+        metaphors = generate_metaphor(
+            source=request.source,
+            target=request.target,
+            Context=normalized_context,
+            count=request.count or 2,
+        )
+
+        # Deduplicate
+        unique_metaphors = []
+        for m in metaphors:
+            if m not in unique_metaphors:
+                unique_metaphors.append(m)
+        # await log_api_request(request.userId, "metaphor-creator", 200, 500)
+        return {"metaphors": unique_metaphors}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating metaphors: {str(e)}")
+   
+# The above code is a code snippet written in Python. It appears to be defining a variable
+# `userId` with type hinting as `str`. The `
+class MaskingRequestRealAgent(BaseModel):
+    name:str
+    text: str
+    top_k: int  # Updated default value to be more reasonable
+    # userId:str
+    
+@app.post("/api/predict-mask-agent")
+async def predict_mask(request: MaskingRequestRealAgent):
+    try:
+        if "[mask]" not in request.text:
+            raise HTTPException(status_code=400, detail="Text must contain [mask] token")
+        print(request)
+        # Ensure top_k is within reasonable bounds
+        top_k = max(1, min(15, request.top_k))  # Allow up to 15 suggestions
+        # user_id=request.userId
+        # print(user_id)
+        suggestions = predict_masked_tokens(request.text, top_k=top_k)
+        # await log_api_request(user_id, "masking-predict", 200, 500)
+        
+        return {"suggestions": suggestions}
+    except Exception as e:
+        print(f"Error predicting masked tokens: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error predicting masked tokens: {str(e)}") 
+    
+class PredictionRequestRealAgent(BaseModel):
+    name: str
+    text: str
+    # userId:str
+    
+@app.post("/api/predict-agent", response_model=PredictionResponse)
+async def predict_metaphor(request: PredictionRequestRealAgent):
+    try:
+        is_metaphor, confidence = classify_metaphor(request.text)
+        # await log_api_request(request.userId, "metaphor-classifier", 200,500)
+        return {"is_metaphor": is_metaphor, "confidence": confidence}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error predicting metaphor: {str(e)}")
+                   
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Song Analysis API"}
