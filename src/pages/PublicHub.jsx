@@ -224,6 +224,7 @@ const PublicHub = () => {
   const [likedItems, setLikedItems] = useState(new Set());
   const [selectedContent, setSelectedContent] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const services = [
     { value: 'all', label: 'All Services', color: 'gray' },
@@ -465,7 +466,13 @@ const PublicHub = () => {
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
       toast.success('Copied to clipboard!');
+      
+      // Reset the copy success state after 2 seconds
+      setTimeout(() => {
+        setCopySuccess(false);
+      }, 2000);
     } catch (error) {
       console.error('Error copying:', error);
       toast.error('Failed to copy');
@@ -656,10 +663,25 @@ const PublicHub = () => {
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => copyToClipboard(selectedContent.content)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all transform hover:scale-105"
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all transform hover:scale-105 ${
+                      copySuccess 
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                        : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-blue-600 hover:to-purple-600 text-white'
+                    }`}
                   >
-                    <Copy className="w-4 h-4" />
-                    <span>Copy</span>
+                    {copySuccess ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        <span>Copy</span>
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => handleShare(selectedContent)}
