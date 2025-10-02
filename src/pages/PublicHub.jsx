@@ -274,7 +274,7 @@ const PublicHub = () => {
       if (cachedData && cacheTime && (now - parseInt(cacheTime)) < 120000) {
         const cached = JSON.parse(cachedData);
         setPublicContent(cached);
-        setTotalPages(Math.ceil(cached.length / 9));
+        setTotalPages(Math.ceil(cached.length / 12));
         setLoading(false);
         console.log('Using cached data:', cached.length, 'items');
         return; // Exit early, don't fetch fresh data if cache is recent
@@ -343,7 +343,7 @@ const PublicHub = () => {
       // Only update content if it's different from current content to prevent glitches
       if (JSON.stringify(filteredContent) !== JSON.stringify(publicContent)) {
         setPublicContent(filteredContent);
-        setTotalPages(Math.ceil(filteredContent.length / 9));
+        setTotalPages(Math.ceil(filteredContent.length / 12));
       }
       
       // Cache the results
@@ -734,7 +734,7 @@ const PublicHub = () => {
       <Header />
       
       <div className="flex-1 p-4 relative z-10">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-8xl mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-2">Public Hub</h1>
             <p className="text-gray-300">Discover and share amazing AI-generated content from our community</p>
@@ -861,7 +861,7 @@ const PublicHub = () => {
         </div>
 
         {/* Enhanced Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-300 ease-in-out relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 transition-all duration-300 ease-in-out relative">
           {/* Loading overlay for content updates */}
           {contentUpdating && (
             <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
@@ -873,7 +873,7 @@ const PublicHub = () => {
           )}
           
           {publicContent
-            .slice((currentPage - 1) * 9, currentPage * 9)
+            .slice((currentPage - 1) * 12, currentPage * 12)
             .map((content, index) => (
             <div 
               key={content.id} 
