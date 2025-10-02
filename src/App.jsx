@@ -63,7 +63,6 @@ function App() {
                     </PrivateRoute>
                   } 
                 />
-                <SpeedInsights />
                 <Route 
                   path="/lyric-generator" 
                   element={
@@ -156,6 +155,7 @@ function App() {
                 />
               </Routes>
             </div>
+            <SpeedInsights />
           </KeyboardShortcutsProvider>
         </Router>
         </StripeProvider>
