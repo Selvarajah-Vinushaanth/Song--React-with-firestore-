@@ -7,6 +7,7 @@ import { KeyboardShortcutsProvider } from './context/KeyboardShortcutsContext';
 import StripeProvider from './components/StripeProvider';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import ChatFlowise from './pages/ChatFlowise';
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 // Import page components
 import HomePage from './pages/HomePage';
@@ -62,6 +63,7 @@ function App() {
                     </PrivateRoute>
                   } 
                 />
+                <SpeedInsights />
                 <Route 
                   path="/lyric-generator" 
                   element={
