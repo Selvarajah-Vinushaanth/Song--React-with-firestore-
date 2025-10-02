@@ -741,7 +741,7 @@ const PublicHub = () => {
           </div>
 
         {/* Enhanced Search and Filters */}
-        <div className="bg-gradient-to-r from-slate-800/80 via-slate-700/80 to-slate-800/80 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/10 shadow-2xl animate-slideInLeft">
+        <div className="bg-gradient-to-r from-slate-900/90 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/10 shadow-2xl animate-slideInLeft">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
             {/* Search Section */}
             <div className="lg:col-span-5">
@@ -877,7 +877,7 @@ const PublicHub = () => {
             .map((content, index) => (
             <div 
               key={content.id} 
-              className="enhanced-card rounded-2xl p-6 cursor-pointer group"
+              className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 cursor-pointer group shadow-lg"
               onClick={() => handleView(content.id)}
               style={{ 
                 animationDelay: `${index * 100}ms`,
