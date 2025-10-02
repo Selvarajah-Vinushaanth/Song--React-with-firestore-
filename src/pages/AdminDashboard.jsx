@@ -104,6 +104,8 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(10);
   const [notifications, setNotifications] = useState([]);
   const [systemHealth, setSystemHealth] = useState({
     cpu: 45,
@@ -197,6 +199,11 @@ const AdminDashboard = () => {
       // Cleanup listeners when component unmounts
     };
   }, [timeRange]);
+
+  // Reset pagination when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
 
   const setupRealtimeListeners = () => {
     setLoading(true);
@@ -1472,7 +1479,9 @@ const getPaymentPlanData = (range = '7d') => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
-              {filteredUsers.slice(0, 10).map((user) => {
+              {filteredUsers
+                .slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
+                .map((user) => {
                 const userApiKeys = dashboardData.apiKeys.filter(key => key.userId === user.id);
                 const userEmail = user.email || user.profile?.email || 'No email';
                 const userCreatedAt = user.createdAt || user.profile?.createdAt || user.subscription?.startDate;
@@ -1562,16 +1571,47 @@ const getPaymentPlanData = (range = '7d') => {
         
         <div className="mt-6 flex items-center justify-between">
           <p className="text-gray-400 text-sm">
-            Showing {Math.min(filteredUsers.length, 10)} of {filteredUsers.length} users
+            Showing {Math.min(filteredUsers.length, (currentPage - 1) * usersPerPage + usersPerPage)} of {filteredUsers.length} users
           </p>
           <div className="flex items-center space-x-2">
-            <button className="px-3 py-1 bg-gray-700/50 text-gray-400 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-lg transition-colors duration-200 ${
+                currentPage === 1 
+                  ? 'bg-gray-700/30 text-gray-600 cursor-not-allowed' 
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
               Previous
             </button>
-            <button className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
-              1
-            </button>
-            <button className="px-3 py-1 bg-gray-700/50 text-gray-400 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+            
+            {/* Page Numbers */}
+            {Array.from({ length: Math.ceil(filteredUsers.length / usersPerPage) }, (_, i) => i + 1)
+              .slice(Math.max(0, currentPage - 3), Math.min(Math.ceil(filteredUsers.length / usersPerPage), currentPage + 2))
+              .map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded-lg transition-colors duration-200 ${
+                    currentPage === page 
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredUsers.length / usersPerPage)))}
+              disabled={currentPage === Math.ceil(filteredUsers.length / usersPerPage)}
+              className={`px-3 py-1 rounded-lg transition-colors duration-200 ${
+                currentPage === Math.ceil(filteredUsers.length / usersPerPage) 
+                  ? 'bg-gray-700/30 text-gray-600 cursor-not-allowed' 
+                  : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
+              }`}
+            >
               Next
             </button>
           </div>
