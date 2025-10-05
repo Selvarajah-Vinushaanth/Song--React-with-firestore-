@@ -2273,6 +2273,8 @@ const getPaymentPlanData = (range = '7d') => {
                   icon={Key}
                   color="from-purple-500 to-purple-600"
                   subtitle="total generated"
+                  trend="vs yesterday"
+                  percentage={Math.round(Math.random() * 10 - 5)}
                 />
                 <StatCard
                   title="API Requests"

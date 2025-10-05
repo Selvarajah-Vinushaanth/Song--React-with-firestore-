@@ -8,15 +8,21 @@
     "dev": "nodemon stripe-server.js"
   },
   "dependencies": {
-    "stripe": "^14.21.0",
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "firebase-admin": "^13.5.0",
+    "socket.io": "^4.8.1",
+    "stripe": "^14.21.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
-  "keywords": ["stripe", "payments", "subscription"],
+  "keywords": [
+    "stripe",
+    "payments",
+    "subscription"
+  ],
   "author": "Group-23",
   "license": "MIT"
 }

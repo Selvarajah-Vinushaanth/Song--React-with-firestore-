@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, orderBy, query, where, limit, startAfter, doc, updateDoc, increment } from 'firebase/firestore';
 import { db, useAuth } from '../context/AuthContext';
-import { Heart, MessageCircle, Search, Filter, User, Calendar, Tag, Eye, X, Share2, Copy, ExternalLink } from 'lucide-react';
+import { Heart, MessageCircle, Search, Filter, User, Calendar, Tag, Eye, X, Share2, Copy, ExternalLink, Activity, TrendingUp } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Header from '../components/Header';
+import PublicHubChat from '../components/PublicHubChat';
 
 // Add CSS animations
 const styles = `
@@ -213,6 +214,7 @@ if (typeof document !== 'undefined') {
 
 const PublicHub = () => {
   const { currentUser } = useAuth();
+  const [activeTab, setActiveTab] = useState('feed');
   const [publicContent, setPublicContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [contentUpdating, setContentUpdating] = useState(false);
@@ -740,6 +742,36 @@ const PublicHub = () => {
             <p className="text-gray-300">Discover and share amazing AI-generated content from our community</p>
           </div>
 
+          {/* Tab Navigation */}
+          <div className="flex justify-center mb-8">
+            <div className="flex bg-gray-800/50 rounded-xl p-2 border border-gray-700/50">
+              {[
+                { id: 'feed', label: 'Community Feed', icon: Activity },
+                { id: 'chat', label: 'Live Chat', icon: MessageCircle },
+                { id: 'trending', label: 'Trending', icon: TrendingUp }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                      activeTab === tab.id
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === 'feed' && (
+            <>
         {/* Enhanced Search and Filters */}
         <div className="bg-gradient-to-r from-slate-900/90 backdrop-blur-xl rounded-2xl p-8 mb-8 border border-white/10 shadow-2xl animate-slideInLeft">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
@@ -1088,6 +1120,33 @@ const PublicHub = () => {
             </div>
           </div>
         )}
+            </>
+          )}
+
+          {/* Chat Tab */}
+          {activeTab === 'chat' && (
+            <div className="max-w-7xl mx-auto">
+              <PublicHubChat />
+            </div>
+          )}
+
+          {/* Trending Tab */}
+          {activeTab === 'trending' && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-xl p-6 border border-gray-700/50">
+                <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6 text-purple-400" />
+                  Trending Content
+                </h2>
+                <div className="text-center py-20">
+                  <TrendingUp className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">Coming Soon</h3>
+                  <p className="text-gray-400">Trending analytics and popular content will be available soon!</p>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 

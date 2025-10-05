@@ -5,6 +5,16 @@
 /.pnp
 .pnp.js
 
+# Server dependencies
+server/node_modules
+server/package-lock.json
+
+# Supabase dependencies and config
+supabase/node_modules
+.supabase/
+functions/node_modules
+functions/.env
+
 # testing
 /coverage
 
@@ -22,6 +32,10 @@
 .env
 .env.*
 
+# Supabase environment variables
+.env.supabase
+.env.supabase.local
+
 # Firebase config and secrets
 firebase-config.js
 src/firebase-config.js
@@ -33,6 +47,18 @@ song-writing-assistant-4cd39-firebase-adminsdk-fbsvc-8ddefda8ac.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Chat server logs and temporary files
+server/logs/
+server/*.log
+server/temp/
+server/uploads/
+
+# Chat server process files
+server/.env
+server/.env.*
+server/pid.txt
+server/chat-server.pid
 
 # editor directories and files
 .idea/

@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePayment } from '../context/PaymentContext';
+import { uploadProfileImage, deleteProfileImage, getOptimizedImageUrl } from '../config/supabase';
 import Header from '../components/Header';
 
 export default function Profile() {
@@ -12,6 +13,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [displayName, setDisplayName] = useState(currentUser?.displayName || '');
   const [photoURL, setPhotoURL] = useState('');
+  const [previousImagePath, setPreviousImagePath] = useState(''); // Track previous image for deletion
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -37,9 +39,9 @@ export default function Profile() {
 
   // Get Google profile image or use current photoURL
   const getProfileImageUrl = () => {
-    // First priority: uploaded/custom photoURL
+    // First priority: uploaded/custom photoURL from Supabase
     if (photoURL && !photoURL.includes('ui-avatars.com')) {
-      return photoURL;
+      return getOptimizedImageUrl(photoURL, 150, 150);
     }
     
     // Second priority: Google profile photo from Firebase Auth
@@ -55,6 +57,14 @@ export default function Profile() {
   React.useEffect(() => {
     if (currentUser?.photoURL) {
       setPhotoURL(currentUser.photoURL);
+      // If it's a Supabase URL, extract the path for potential deletion
+      if (currentUser.photoURL.includes('supabase')) {
+        const urlParts = currentUser.photoURL.split('/');
+        const pathIndex = urlParts.findIndex(part => part === 'profiles');
+        if (pathIndex !== -1 && urlParts[pathIndex + 1]) {
+          setPreviousImagePath(`profile-images/${urlParts[pathIndex + 1]}`);
+        }
+      }
     }
   }, [currentUser?.photoURL]);
 
@@ -95,7 +105,7 @@ export default function Profile() {
       // Clear message after 3 seconds
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setError('Failed to update profile');
+      setError('Failed to update profile: ' + (err.message || err));
       console.error(err);
     } finally {
       setLoading(false);
@@ -113,29 +123,50 @@ export default function Profile() {
     if (!file.type.includes('image')) {
       return setError('Please select an image file');
     }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      return setError('Image size should be less than 5MB');
+    }
     
     try {
       setUploadingImage(true);
       setError('');
       
-      // Create a temporary URL for preview
-      const imageUrl = URL.createObjectURL(file);
-      setPhotoURL(imageUrl);
+      // Delete previous image if it exists and is from Supabase
+      if (previousImagePath) {
+        console.log('Deleting previous image:', previousImagePath);
+        await deleteProfileImage(previousImagePath);
+      }
       
-      // In a real app, you would:
-      // 1. Upload file to Firebase Storage
-      // 2. Get permanent URL
-      // 3. Update user profile with permanent URL
+      // Upload new image to Supabase
+      console.log('Uploading new image...');
+      const uploadResult = await uploadProfileImage(file, currentUser.uid);
       
-      // For now, simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Failed to upload image');
+      }
       
-      // After successful upload in a real app:
-      // await updateUserProfile(currentUser, { photoURL: permanentUrl });
+      console.log('Upload successful:', uploadResult.url);
+      
+      // Update local state with new image URL
+      setPhotoURL(uploadResult.url);
+      setPreviousImagePath(uploadResult.path);
+      
+      // Update Firebase Auth profile with new image URL
+      await updateUserProfile(currentUser, { 
+        photoURL: uploadResult.url,
+        displayName: displayName || currentUser.displayName
+      });
+      
+      setMessage('Profile image updated successfully!');
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setMessage(''), 3000);
       
     } catch (err) {
-      setError('Failed to upload image');
-      console.error(err);
+      console.error('Image upload error:', err);
+      setError(err.message || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
     }
