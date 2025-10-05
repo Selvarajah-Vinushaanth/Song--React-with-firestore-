@@ -57,7 +57,7 @@ const PublicHubChat = () => {
     if (!currentUser) return;
 
     const SOCKET_URL = process.env.NODE_ENV === 'production' 
-      ? 'https://your-backend-url.com' 
+      ? 'https://project-community-chat-1.onrender.com' 
       : 'http://localhost:5001';
 
     const socketInstance = io(SOCKET_URL, {
