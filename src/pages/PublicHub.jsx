@@ -748,7 +748,7 @@ const PublicHub = () => {
               {[
                 { id: 'feed', label: 'Community Feed', icon: Activity },
                 { id: 'chat', label: 'Live Chat', icon: MessageCircle },
-                { id: 'trending', label: 'Trending', icon: TrendingUp }
+                // { id: 'trending', label: 'Trending', icon: TrendingUp }
               ].map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -1131,7 +1131,7 @@ const PublicHub = () => {
           )}
 
           {/* Trending Tab */}
-          {activeTab === 'trending' && (
+          {/* {activeTab === 'trending' && (
             <div className="max-w-4xl mx-auto">
               <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-xl p-6 border border-gray-700/50">
                 <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
@@ -1145,7 +1145,7 @@ const PublicHub = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
         </div>
       </div>

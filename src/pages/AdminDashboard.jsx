@@ -98,6 +98,24 @@ ChartJS.register(
 );
 
 const AdminDashboard = () => {
+  // Add CSS to hide scrollbars
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
@@ -169,7 +187,10 @@ const AdminDashboard = () => {
 
   // Export data function
   const exportToCSV = (data, filename) => {
-    if (!data || data.length === 0) return;
+    if (!data || data.length === 0) {
+      toast.warning(`No data available for ${filename}`);
+      return;
+    }
     
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map(item => 
@@ -191,6 +212,147 @@ const AdminDashboard = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast.success(`${filename}.csv exported successfully!`);
+  };
+
+  // Export all data function
+  const exportAllData = () => {
+    try {
+      toast.loading('Preparing comprehensive export...');
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const allDataSets = [
+        { data: dashboardData.users, name: 'users' },
+        { data: dashboardData.apiKeys, name: 'api-keys' },
+        { data: dashboardData.apiRequests, name: 'api-requests' },
+        { data: dashboardData.payments, name: 'payments' },
+        { data: dashboardData.feedback, name: 'feedback' },
+        { data: dashboardData.publicHub, name: 'public-hub' },
+        { data: dashboardData.usageLogs, name: 'usage-logs' },
+        { data: dashboardData.chatMessages, name: 'chat-messages' },
+        { data: dashboardData.onlineUsers, name: 'online-users' }
+      ];
+
+      // Export each dataset
+      allDataSets.forEach(dataset => {
+        if (dataset.data && dataset.data.length > 0) {
+          setTimeout(() => {
+            exportToCSV(dataset.data, `${timestamp}_${dataset.name}`);
+          }, allDataSets.indexOf(dataset) * 500); // Stagger exports
+        }
+      });
+
+      // Create summary report
+      const summaryData = [{
+        export_date: new Date().toISOString(),
+        total_users: dashboardData.users.length,
+        total_api_keys: dashboardData.apiKeys.length,
+        total_api_requests: dashboardData.apiRequests.length,
+        total_payments: dashboardData.payments.length,
+        total_feedback: dashboardData.feedback.length,
+        total_public_hub_content: dashboardData.publicHub.length,
+        total_usage_logs: dashboardData.usageLogs.length,
+        total_chat_messages: dashboardData.chatMessages.length,
+        online_users_count: dashboardData.onlineUsers.length,
+        time_range_filter: timeRange,
+        exported_by: currentUser?.email || 'admin'
+      }];
+
+      setTimeout(() => {
+        exportToCSV(summaryData, `${timestamp}_export-summary`);
+        toast.dismiss();
+        toast.success('Complete data export finished! Check your downloads.');
+      }, allDataSets.length * 500 + 1000);
+
+    } catch (error) {
+      console.error('Error exporting all data:', error);
+      toast.error('Failed to export all data');
+    }
+  };
+
+  // Export filtered API requests based on time range
+  const exportFilteredApiRequests = () => {
+    const now = new Date();
+    const timeRangeMs = {
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      '3m': 90 * 24 * 60 * 60 * 1000
+    };
+    const cutoffTime = new Date(now.getTime() - timeRangeMs[timeRange]);
+    
+    const filteredRequests = dashboardData.apiRequests.filter(req => {
+      try {
+        return req.timestamp && req.timestamp.toDate() > cutoffTime;
+      } catch (error) {
+        return false;
+      }
+    });
+    
+    exportToCSV(filteredRequests, `filtered-api-requests-${timeRange}`);
+  };
+
+  // Export active users
+  const exportActiveUsers = () => {
+    const activeUsers = dashboardData.users.filter(user => 
+      dashboardData.apiKeys.some(key => key.userId === user.id) ||
+      dashboardData.apiRequests.some(req => req.userId === user.id)
+    );
+    
+    exportToCSV(activeUsers, `active-users-${timeRange}`);
+  };
+
+  // Export recent payments
+  const exportRecentPayments = () => {
+    const now = new Date();
+    const timeRangeMs = {
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+      '3m': 90 * 24 * 60 * 60 * 1000
+    };
+    const cutoffTime = new Date(now.getTime() - timeRangeMs[timeRange]);
+    
+    const recentPayments = dashboardData.payments.filter(payment => {
+      try {
+        const paymentDate = payment.createdAt?.toDate ? payment.createdAt.toDate() : new Date(payment.createdAt);
+        return paymentDate >= cutoffTime;
+      } catch (error) {
+        return false;
+      }
+    });
+    
+    exportToCSV(recentPayments, `recent-payments-${timeRange}`);
+  };
+
+  // Export system statistics summary
+  const exportSystemStats = () => {
+    const statsData = [{
+      export_timestamp: new Date().toISOString(),
+      time_range: timeRange,
+      total_users: stats.totalUsers,
+      active_users: stats.activeUsers,
+      daily_active_users: stats.dailyActiveUsers,
+      total_api_keys: stats.totalApiKeys,
+      total_requests: stats.totalRequests,
+      success_rate: stats.successRate,
+      error_rate: stats.errorRate,
+      avg_response_time: stats.avgResponseTime,
+      total_revenue: stats.totalRevenue,
+      monthly_growth: stats.monthlyGrowth,
+      churn_rate: stats.churnRate,
+      total_chat_messages: stats.totalChatMessages,
+      active_chat_users: stats.activeChatUsers,
+      daily_chat_messages: stats.dailyChatMessages,
+      most_active_chat_user: stats.mostActiveChatUser,
+      top_service: stats.topService,
+      system_cpu: systemHealth.cpu,
+      system_memory: systemHealth.memory,
+      system_storage: systemHealth.storage,
+      system_uptime: systemHealth.uptime,
+      active_connections: systemHealth.activeConnections
+    }];
+    
+    exportToCSV(statsData, `system-statistics-${timeRange}`);
   };
 
   useEffect(() => {
@@ -1382,7 +1544,7 @@ const getPaymentPlanData = (range = '7d') => {
         <Activity className="h-6 w-6 mr-3 text-orange-400" />
         Recent Activity
       </h3>
-      <div className="space-y-4 max-h-96 overflow-y-auto">
+      <div className="space-y-4 max-h-96 overflow-y-auto hide-scrollbar">
         {dashboardData.apiRequests && dashboardData.apiRequests.length > 0 ? (
           dashboardData.apiRequests.slice(0, 10).map((request, index) => (
             <div key={index} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/30 hover:bg-gray-700/50 transition-all duration-300">
@@ -1624,10 +1786,35 @@ const getPaymentPlanData = (range = '7d') => {
     const [selectedService, setSelectedService] = useState('all');
     const [selectedStatus, setSelectedStatus] = useState('all');
     
+    // Calculate time range cutoff
+    const getTimeRangeCutoff = () => {
+      const now = new Date();
+      const timeRangeMs = {
+        '7d': 7 * 24 * 60 * 60 * 1000,
+        '30d': 30 * 24 * 60 * 60 * 1000,
+        '3m': 90 * 24 * 60 * 60 * 1000
+      };
+      return new Date(now.getTime() - timeRangeMs[timeRange]);
+    };
+    
     const filteredFeedback = dashboardData.feedback.filter(feedback => {
       const serviceMatch = selectedService === 'all' || feedback.service === selectedService;
       const statusMatch = selectedStatus === 'all' || feedback.status === selectedStatus;
-      return serviceMatch && statusMatch;
+      
+      // Time range filtering
+      const cutoffTime = getTimeRangeCutoff();
+      let timeMatch = true;
+      if (feedback.timestamp) {
+        try {
+          const feedbackDate = feedback.timestamp.toDate ? feedback.timestamp.toDate() : new Date(feedback.timestamp);
+          timeMatch = feedbackDate >= cutoffTime;
+        } catch (error) {
+          console.log('Error parsing feedback timestamp:', error);
+          timeMatch = true; // Include items with invalid timestamps
+        }
+      }
+      
+      return serviceMatch && statusMatch && timeMatch;
     });
 
     const serviceOptions = [
@@ -1755,10 +1942,15 @@ const getPaymentPlanData = (range = '7d') => {
     return (
       <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-white flex items-center">
-            <MessageSquare className="h-6 w-6 mr-3 text-purple-400" />
-            User Feedback Management
-          </h3>
+          <div>
+            <h3 className="text-xl font-semibold text-white flex items-center">
+              <MessageSquare className="h-6 w-6 mr-3 text-purple-400" />
+              User Feedback Management
+            </h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Showing feedback from {timeRange.replace('d', ' days').replace('m', ' months')}
+            </p>
+          </div>
           <div className="flex items-center space-x-4">
             <select
               value={selectedService}
@@ -1839,14 +2031,14 @@ const getPaymentPlanData = (range = '7d') => {
         
         <div className="mt-6 flex items-center justify-between">
           <p className="text-gray-400 text-sm">
-            Showing {filteredFeedback.length} feedback entries
+            Showing {filteredFeedback.length} feedback entries ({timeRange})
           </p>
           <div className="flex items-center space-x-4">
             <div className="text-sm text-gray-400">
-              Total: {dashboardData.feedback.length} | 
-              New: {dashboardData.feedback.filter(f => f.status === 'new').length} | 
-              Reviewed: {dashboardData.feedback.filter(f => f.status === 'reviewed').length} | 
-              Resolved: {dashboardData.feedback.filter(f => f.status === 'resolved').length}
+              Filtered: {filteredFeedback.length} | 
+              New: {filteredFeedback.filter(f => f.status === 'new').length} | 
+              Reviewed: {filteredFeedback.filter(f => f.status === 'reviewed').length} | 
+              Resolved: {filteredFeedback.filter(f => f.status === 'resolved').length}
             </div>
           </div>
         </div>
@@ -1894,8 +2086,34 @@ const getPaymentPlanData = (range = '7d') => {
     const [selectedService, setSelectedService] = useState('all');
     const [sortBy, setSortBy] = useState('recent');
     
+    // Calculate time range cutoff
+    const getTimeRangeCutoff = () => {
+      const now = new Date();
+      const timeRangeMs = {
+        '7d': 7 * 24 * 60 * 60 * 1000,
+        '30d': 30 * 24 * 60 * 60 * 1000,
+        '3m': 90 * 24 * 60 * 60 * 1000
+      };
+      return new Date(now.getTime() - timeRangeMs[timeRange]);
+    };
+    
     const filteredContent = dashboardData.publicHub.filter(content => {
-      return selectedService === 'all' || content.service === selectedService;
+      const serviceMatch = selectedService === 'all' || content.service === selectedService;
+      
+      // Time range filtering
+      const cutoffTime = getTimeRangeCutoff();
+      let timeMatch = true;
+      if (content.createdAt) {
+        try {
+          const contentDate = content.createdAt.toDate ? content.createdAt.toDate() : new Date(content.createdAt);
+          timeMatch = contentDate >= cutoffTime;
+        } catch (error) {
+          console.log('Error parsing content timestamp:', error);
+          timeMatch = true; // Include items with invalid timestamps
+        }
+      }
+      
+      return serviceMatch && timeMatch;
     });
 
     const sortedContent = [...filteredContent].sort((a, b) => {
@@ -2010,10 +2228,15 @@ const getPaymentPlanData = (range = '7d') => {
     return (
       <div className="bg-gradient-to-br from-gray-800/95 via-gray-800/90 to-gray-900/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-white flex items-center">
-            <Globe className="h-6 w-6 mr-3 text-purple-400" />
-            Public Hub Content Management
-          </h3>
+          <div>
+            <h3 className="text-xl font-semibold text-white flex items-center">
+              <Globe className="h-6 w-6 mr-3 text-purple-400" />
+              Public Hub Content Management
+            </h3>
+            <p className="text-sm text-gray-400 mt-1">
+              Showing content from {timeRange.replace('d', ' days').replace('m', ' months')}
+            </p>
+          </div>
           <div className="flex items-center space-x-4">
             <select
               value={selectedService}
@@ -2040,7 +2263,7 @@ const getPaymentPlanData = (range = '7d') => {
           </div>
         </div>
 
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+        <div className="space-y-4 max-h-96 overflow-y-auto hide-scrollbar">
           {sortedContent.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <Globe className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -2090,22 +2313,25 @@ const getPaymentPlanData = (range = '7d') => {
         </div>
         
         <div className="mt-4 p-4 bg-gray-800/30 rounded-lg border border-gray-700/30">
+          <div className="mb-3 text-center">
+            <p className="text-sm text-gray-400">Showing content from {timeRange.replace('d', ' days').replace('m', ' months')}</p>
+          </div>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-purple-400">{dashboardData.publicHub.length}</div>
-              <div className="text-sm text-gray-400">Total Content</div>
+              <div className="text-2xl font-bold text-purple-400">{filteredContent.length}</div>
+              <div className="text-sm text-gray-400">Filtered Content</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-blue-400">
-                {dashboardData.publicHub.reduce((sum, item) => sum + (item.views || 0), 0)}
+                {filteredContent.reduce((sum, item) => sum + (item.views || 0), 0)}
               </div>
-              <div className="text-sm text-gray-400">Total Views</div>
+              <div className="text-sm text-gray-400">Views ({timeRange})</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-pink-400">
-                {dashboardData.publicHub.reduce((sum, item) => sum + (item.likes || 0), 0)}
+                {filteredContent.reduce((sum, item) => sum + (item.likes || 0), 0)}
               </div>
-              <div className="text-sm text-gray-400">Total Likes</div>
+              <div className="text-sm text-gray-400">Likes ({timeRange})</div>
             </div>
           </div>
         </div>
@@ -2114,7 +2340,7 @@ const getPaymentPlanData = (range = '7d') => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden flex flex-col">
       {/* Animated Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
       
@@ -2123,7 +2349,7 @@ const getPaymentPlanData = (range = '7d') => {
       <div className="absolute bottom-40 right-20 w-80 h-80 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "2s" }}></div>
       <div className="absolute top-60 right-40 w-64 h-64 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 rounded-full blur-3xl animate-pulse opacity-70" style={{ animationDelay: "1s" }}></div>
 
-      <div className="relative z-10 p-6">
+      <div className="relative z-10 p-6 flex-grow">
         <div className="max-w-8xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -2194,22 +2420,62 @@ const getPaymentPlanData = (range = '7d') => {
                     <Download className="h-5 w-5 mr-2" />
                     Export
                   </button>
-                  <div id="export-menu" className="hidden absolute right-0 mt-2 w-48 bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-xl z-10 border border-gray-700">
+                  <div id="export-menu" className="hidden absolute right-0 mt-2 w-56 bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-xl z-10 border border-gray-700 max-h-96 overflow-y-auto hide-scrollbar">
                     <div className="py-2">
+                      <div className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-700 mb-2">
+                        Raw Data Exports
+                      </div>
                       {[
-                        { label: 'Export Users', action: () => exportToCSV(dashboardData.users, 'users') },
-                        { label: 'Export API Keys', action: () => exportToCSV(dashboardData.apiKeys, 'api-keys') },
-                        { label: 'Export Requests', action: () => exportToCSV(dashboardData.apiRequests, 'api-requests') },
-                        { label: 'Export Payments', action: () => exportToCSV(dashboardData.payments, 'payments') }
+                        { label: 'Export Users', action: () => exportToCSV(dashboardData.users, 'users'), icon: '👥' },
+                        { label: 'Export API Keys', action: () => exportToCSV(dashboardData.apiKeys, 'api-keys'), icon: '🔑' },
+                        { label: 'Export API Requests', action: () => exportToCSV(dashboardData.apiRequests, 'api-requests'), icon: '📊' },
+                        { label: 'Export Payments', action: () => exportToCSV(dashboardData.payments, 'payments'), icon: '💳' },
+                        { label: 'Export Feedback', action: () => exportToCSV(dashboardData.feedback, 'user-feedback'), icon: '💬' },
+                        { label: 'Export Public Hub', action: () => exportToCSV(dashboardData.publicHub, 'public-hub-content'), icon: '🌐' },
+                        { label: 'Export Usage Logs', action: () => exportToCSV(dashboardData.usageLogs, 'usage-logs'), icon: '📋' },
+                        // { label: 'Export Chat Messages', action: () => exportToCSV(dashboardData.chatMessages, 'chat-messages'), icon: '💭' },
+                        // { label: 'Export Online Users', action: () => exportToCSV(dashboardData.onlineUsers, 'online-users'), icon: '🟢' }
                       ].map((item, index) => (
                         <button 
                           key={index}
                           onClick={item.action}
-                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white w-full text-left rounded-lg mx-1 transition-colors duration-200"
+                          className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white w-full text-left rounded-lg mx-1 transition-colors duration-200"
                         >
+                          <span className="mr-2 text-base">{item.icon}</span>
                           {item.label}
                         </button>
                       ))}
+                      
+                      <div className="border-t border-gray-700 mt-2 pt-2">
+                        <div className="px-3 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                          Filtered Exports ({timeRange})
+                        </div>
+                        {[
+                          { label: 'Export Recent API Requests', action: () => exportFilteredApiRequests(), icon: '⏱️' },
+                          { label: 'Export Active Users', action: () => exportActiveUsers(), icon: '✨' },
+                          { label: 'Export Recent Payments', action: () => exportRecentPayments(), icon: '💰' },
+                          { label: 'Export System Statistics', action: () => exportSystemStats(), icon: '�' }
+                        ].map((item, index) => (
+                          <button 
+                            key={`filtered-${index}`}
+                            onClick={item.action}
+                            className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white w-full text-left rounded-lg mx-1 transition-colors duration-200"
+                          >
+                            <span className="mr-2 text-base">{item.icon}</span>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      <div className="border-t border-gray-700 mt-2 pt-2">
+                        <button 
+                          onClick={() => exportAllData()}
+                          className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-blue-600 hover:text-white w-full text-left rounded-lg mx-1 transition-all duration-200 font-semibold"
+                        >
+                          <span className="mr-2 text-base">📦</span>
+                          Export Complete Dataset
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2607,14 +2873,14 @@ const getPaymentPlanData = (range = '7d') => {
           )}
         </div>
       </div>
-      <footer className="relative text-center py-16 text-gray-400 border-t border-gray-800/50 mt-auto backdrop-blur-sm">
+      <footer className="relative bg-gray-900/90 backdrop-blur-sm border-t border-gray-700/50 text-center py-8 text-gray-400 mt-auto">
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         <div className="relative z-10">
-          <p className="mb-6 text-lg font-medium">
+          <p className="mb-4 text-lg font-medium">
             <span className="text-white">Tamil AI Models</span> &copy; 2025 | Created by
             <span className="text-violet-400 font-semibold"> Group-23</span>
           </p>
-          <div className="flex justify-center space-x-8 mt-8">
+          <div className="flex justify-center space-x-6">
             {[
               {
                 icon: "M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z",
@@ -2640,7 +2906,7 @@ const getPaymentPlanData = (range = '7d') => {
                 <span className="sr-only">{social.label}</span>
                 <div className="relative">
                   <div className="absolute inset-0 bg-current opacity-20 rounded-full blur-lg scale-150 group-hover:opacity-40 transition-opacity duration-300"></div>
-                  <svg className="relative h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="relative h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                     <path fillRule="evenodd" d={social.icon} clipRule="evenodd" />
                   </svg>
                 </div>
