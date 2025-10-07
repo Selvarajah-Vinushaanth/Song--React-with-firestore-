@@ -36,10 +36,11 @@ const PublicHubChat = () => {
   const typingTimeoutRef = useRef(null);
   const chatContainerRef = useRef(null);
   const messageInputRef = useRef(null);
+  const emojiPickerRef = useRef(null);
   
 
-  // Emoji list for reactions
-  const emojis = ['😀', '😂', '❤️', '👍', '👎', '😢', '😡', '🎉', '🔥', '👏', '🎵', '🎶', '✨', '💫', '🌟', '🎤'];
+  // Emoji list for reactions (removed empty strings)
+  const emojis = ['😀','😄','😁','😂','🤣','😊','😍','❤️','👍','👎','🎉','🔥','👏','🎵','🎶','✨','💫','🌟','🎤'];
 
   // Sound notification function
   const playNotificationSound = () => {
@@ -321,6 +322,17 @@ const PublicHubChat = () => {
     return date.toLocaleDateString();
   };
 
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (e) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
+
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center h-[600px] bg-gradient-to-br from-gray-900/90 via-purple-900/50 to-pink-900/30 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl w-full">
@@ -582,7 +594,7 @@ const PublicHubChat = () => {
         <form 
           onSubmit={sendMessage} 
           className="flex items-center gap-6"
-          style={{ overflow: 'hidden' }}  // Prevent form overflow
+          // removed overflow hidden to allow emoji picker to render outside
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
@@ -601,7 +613,10 @@ const PublicHubChat = () => {
             </button>
             
             {showEmojiPicker && (
-              <div className="absolute bottom-full mb-3 left-0 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-white/20 rounded-2xl p-4 shadow-2xl z-50 backdrop-blur-xl min-w-[280px]">
+              <div
+                ref={emojiPickerRef}
+                className="absolute bottom-full mb-3 left-0 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-white/20 rounded-2xl p-4 shadow-2xl z-50 backdrop-blur-xl min-w-[280px]"
+              >
                 <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-yellow-400" />
                   Choose an emoji
