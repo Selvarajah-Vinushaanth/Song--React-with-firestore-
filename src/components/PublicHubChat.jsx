@@ -53,6 +53,21 @@ const PublicHubChat = () => {
     }
   };
 
+  // CSS for hiding scrollbars
+  useEffect(() => {
+    // Add global style to hide scrollbars in the emoji section
+    const style = document.createElement('style');
+    style.textContent = `
+      .scrollbar-hidden::-webkit-scrollbar {
+        display: none;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Initialize socket connection
   useEffect(() => {
     if (!currentUser) return;
@@ -621,7 +636,11 @@ const PublicHubChat = () => {
                   <Sparkles className="h-4 w-4 text-yellow-400" />
                   Choose an emoji
                 </h4>
-                <div className="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-8 gap-2 max-h-48 overflow-y-auto scrollbar-hidden"
+                  style={{
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                  }}>
                   {emojis.map((emoji, index) => (
                     <button
                       key={index}
